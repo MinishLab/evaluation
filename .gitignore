@@ -1,6 +1,7 @@
 # User specific files
 .local/
 .vscode/
+.DS_store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
