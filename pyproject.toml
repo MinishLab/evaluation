@@ -1,8 +1,24 @@
 [project]
-name = "PACKAGE"
-description = "DESCRIPTION"
+name = "evaluation"
+description = "Evaluation of word embeddings"
 readme = "README.md"
 version = "0.1.0"
+
+dependencies = [
+"autofj",
+"datasets",
+"huggingface-hub",
+"model2vec@git+https://github.com/MinishLab/model2vec@main",
+"mteb",
+"numpy<2.0.0",
+"pandas",
+"pytorch_lightning",
+"reach",
+"scikit-learn",
+"scipy",
+"sentence_transformers",
+"torch",
+]
 
 [build-system]
 requires = ["setuptools>=64", "setuptools_scm>=8"]
@@ -44,7 +60,7 @@ ignore = [
     # Allow self and cls to be untyped, and allow Any type
     "ANN101", "ANN102", "ANN401",
     # Pydocstyle ignores
-    "D203", "D213",
+    "D100", "D101", "D104", "D203", "D204", "D212", "D401",
     # Allow use of f-strings in logging
     "G004"
 ]
