@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from evaluation.mteb_helpers.utilities import ResultSet, get_results_from_hub, get_results_model_folder
+from evaluation.utilities import ResultSet, get_results_from_hub, get_results_model_folder
 
 
 def main() -> dict[str, ResultSet]:
