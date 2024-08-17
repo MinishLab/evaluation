@@ -17,7 +17,8 @@ _FORBIDDEN_JSONS = ("model_meta.json", "word_sim_benchmarks.json", "pearl_benchm
 
 @dataclass
 class DatasetResult:
-    """Scores for a single dataset.
+    """
+    Scores for a single dataset.
 
     Attributes
     ----------
@@ -59,7 +60,8 @@ class ResultSet:
 
 
 def _process_result_data(data: dict[str, Any]) -> DatasetResult:
-    """Process a single result JSON.
+    """
+    Process a single result JSON.
 
     :param data: The data to process.
     :return: The processed data.
@@ -72,7 +74,8 @@ def _process_result_data(data: dict[str, Any]) -> DatasetResult:
 
 
 def get_results_model_folder(model_name_path: Path) -> ResultSet:
-    """Get the results for a single model folder.
+    """
+    Get the results for a single model folder.
 
     :param model_name_path: The path to the model folder.
     :return: The results for the model folder.
@@ -91,7 +94,8 @@ def get_results_model_folder(model_name_path: Path) -> ResultSet:
 
 
 def get_results_from_hub(model_name: str) -> ResultSet | None:
-    """Get the results from the model hub.
+    """
+    Get the results from the model hub.
 
     :param model_name: The name of the model on the model hub.
     :return: The results.

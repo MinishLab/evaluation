@@ -1,29 +1,26 @@
 # -*- coding: utf-8 -*-
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 
-from evaluation.mteb.utilities import ResultSet, get_results_from_hub, get_results_model_folder
+from evaluation.calculate_baseline import ResultSet, get_results_model_folder
 
 
 def main() -> dict[str, ResultSet]:
     """Main function for summarizing the results."""
     parser = ArgumentParser()
-    parser.add_argument("--models", nargs="+", help="The model names on the huggingface model hub.", required=True)
+    parser.add_argument("--results_dir", type=str, help="The root folder of your results directory.", default="results")
     parser.add_argument("--baseline", type=str, help="The baseline directory.", default=None)
     args = parser.parse_args()
 
     results = {}
+    for model_name_path in Path(args.results_dir).iterdir():
+        name = model_name_path.name
+        results[name] = get_results_model_folder(model_name_path)
+
     if args.baseline is not None:
         results["baseline"] = get_results_model_folder(Path(args.baseline))
-
-    for model_name in args.models:
-        result = get_results_from_hub(model_name)
-        if result is None:
-            continue
-        results[model_name] = result
 
     return results
 
@@ -33,16 +30,16 @@ if __name__ == "__main__":
 
     if "baseline" in results:
         baseline = results["baseline"].summarize()
-        d = {k: v.summarize() - baseline for k, v in results.items() if k != "baseline"}
+        d = {k: v.summarize() - baseline for k, v in results.items()}
     else:
         d = {k: v.summarize() for k, v in results.items()}
 
     task_scores = {}
-    for task_subset in ("Classification", "Clustering", "PairClassification", "Reranking", "STS", "Summarization"):
+    for task_subset in ["STS", "Classification", "Clustering", "PairClassification", "Reranking", "Summarization"]:
         if "baseline" in results:
             baseline = results["baseline"].summarize(task_subset=task_subset)
             task_scores[task_subset] = pd.DataFrame(
-                {k: v.summarize(task_subset=task_subset) - baseline for k, v in results.items() if k != "baseline"}
+                {k: v.summarize(task_subset=task_subset) - baseline for k, v in results.items()}
             )
         else:
             task_scores[task_subset] = pd.DataFrame(

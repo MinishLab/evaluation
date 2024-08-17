@@ -1,21 +1,24 @@
-from typing import Any, cast
+from typing import Any
 
 import numpy as np
 import torch
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.callbacks import EarlyStopping
-from pytorch_lightning.utilities.types import EPOCH_OUTPUT
 from sklearn.model_selection import train_test_split
-from torch import nn, optim
+from torch import Tensor, nn, optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
+
+STEP_OUTPUT = Tensor | dict[str, Any]
+EPOCH_OUTPUT = list[STEP_OUTPUT]
 
 
 class ParaphraseDataset(Dataset):
     """Dataset for paraphrase probing task."""
 
     def __init__(self, X: torch.Tensor, label_tensor: torch.Tensor) -> None:
-        """Initialize the dataset.
+        """
+        Initialize the dataset.
 
         :param X: The input data.
         :param label_tensor: The labels.
@@ -36,7 +39,8 @@ class ProbingModel(LightningModule):
     """Probing model for paraphrase detection."""
 
     def __init__(self, input_dim: int, train_dataset: Dataset, valid_dataset: Dataset, test_dataset: Dataset) -> None:
-        """Initialize the probing model.
+        """
+        Initialize the probing model.
 
         :param input_dim: The input dimension.
         :param train_dataset: The training dataset.
@@ -58,12 +62,15 @@ class ProbingModel(LightningModule):
         self.valid_dataset = valid_dataset
         self.test_dataset = test_dataset
 
+        # Store validation and test outputs
+        self.validation_outputs = []
+        self.test_outputs = []
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model."""
         x1 = F.relu(self.linear(x))
         x2 = self.linear2(x1)
         output: torch.Tensor = self.output(x2)
-        # return reshape(output, (-1,))
         return output.reshape((-1,))
 
     def configure_optimizers(self) -> optim.Adam:
@@ -72,97 +79,86 @@ class ProbingModel(LightningModule):
 
     def train_dataloader(self) -> DataLoader:
         """Get the training dataloader."""
-        loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
-        return loader
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
 
     def val_dataloader(self) -> DataLoader:
         """Get the validation dataloader."""
-        loader = DataLoader(self.valid_dataset, batch_size=self.batch_size, shuffle=False)
-        return loader
+        return DataLoader(self.valid_dataset, batch_size=self.batch_size, shuffle=False)
 
     def test_dataloader(self) -> DataLoader:
         """Get the test dataloader."""
-        loader = DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False)
-        return loader
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False)
 
     def compute_accuracy(self, y_hat: torch.Tensor, y: torch.Tensor) -> float:
         """Compute the accuracy of the model."""
         y_pred = (y_hat >= 0.5).long()
-        num_correct = cast(int, (y_pred == y).long().sum().item())
+        num_correct = (y_pred == y).long().sum().item()
         accuracy = num_correct / len(y_hat)
         return accuracy
 
     def training_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> dict[str, Any]:
-        """Training step of the model.
-
-        :param batch: The batch of data containing the input and the labels.
-        :param batch_nb: The batch number.
-        :return: The loss and the accuracy.
-        """
+        """Training step of the model."""
         mode = "train"
         x, y = batch
         y_hat = self(x)
         loss = F.binary_cross_entropy(y_hat, y)
         accuracy = self.compute_accuracy(y_hat, y)
-        return {f"loss": loss, f"{mode}_accuracy": accuracy, "log": {f"{mode}_loss": loss}}
+        return {f"loss": loss, f"{mode}_accuracy": accuracy}
 
     def validation_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> dict[str, Any]:
-        """Validation step of the model.
-
-        :param batch: The batch of data containing the input and the labels.
-        :param batch_nb: The batch number.
-        :return: The loss and the accuracy.
-        """
+        """Validation step of the model."""
         mode = "val"
         x, y = batch
         y_hat = self(x)
         loss = F.binary_cross_entropy(y_hat, y)
         accuracy = self.compute_accuracy(y_hat, y)
-        self.log(f"{mode}_loss", loss, on_epoch=True, on_step=True)
-        self.log(f"{mode}_accuracy", accuracy, on_epoch=True, on_step=True)
-        return {f"{mode}_loss": loss, f"{mode}_accuracy": accuracy, "log": {f"{mode}_loss": loss}}
+        self.log(f"{mode}_loss", loss, on_epoch=True, on_step=False)
+        self.log(f"{mode}_accuracy", accuracy, on_epoch=True, on_step=False)
 
-    def validation_epoch_end(self, outputs: EPOCH_OUTPUT | list[EPOCH_OUTPUT]) -> None:
+        # Store the outputs for aggregation later
+        self.validation_outputs.append({"val_loss": loss, "val_accuracy": accuracy})
+        return {"val_loss": loss, "val_accuracy": accuracy}
+
+    def on_validation_epoch_end(self) -> None:
         """Validation epoch end hook."""
         mode = "val"
-        # Cast instead of type: ignore
-        outputs_cast = cast(list[dict[str, torch.Tensor]], outputs)
-
-        loss_mean = sum([o[f"{mode}_loss"] for o in outputs_cast]) / len(outputs_cast)
-        accuracy_mean = sum([o[f"{mode}_accuracy"] for o in outputs_cast]) / len(outputs_cast)
+        loss_mean = torch.stack([x["val_loss"] for x in self.validation_outputs]).mean()
+        accuracy_mean = torch.tensor([x["val_accuracy"] for x in self.validation_outputs]).mean()
         self.log(f"epoch_{mode}_loss", loss_mean, on_epoch=True, on_step=False)
         self.log(f"epoch_{mode}_accuracy", accuracy_mean, on_epoch=True, on_step=False)
 
-    def test_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> dict[str, Any]:
-        """Test step of the model.
+        # Clear the outputs for the next epoch
+        self.validation_outputs.clear()
 
-        :param batch: The batch of data containing the input and the labels.
-        :param batch_nb: The batch number.
-        :return: The loss and the accuracy.
-        """
+    def test_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> dict[str, Any]:
+        """Test step of the model."""
         mode = "test"
         x, y = batch
         y_hat = self(x)
         loss = F.binary_cross_entropy(y_hat, y)
         accuracy = self.compute_accuracy(y_hat, y)
-        self.log(f"{mode}_loss", loss, on_epoch=True, on_step=True)
-        self.log(f"{mode}_accuracy", accuracy, on_epoch=True, on_step=True)
-        return {f"{mode}_loss": loss, f"{mode}_accuracy": accuracy, "log": {f"{mode}_loss": loss}}
+        self.log(f"{mode}_loss", loss, on_epoch=True, on_step=False)
+        self.log(f"{mode}_accuracy", accuracy, on_epoch=True, on_step=False)
 
-    def test_epoch_end(self, outputs: EPOCH_OUTPUT | list[EPOCH_OUTPUT]) -> None:
+        # Store the outputs for aggregation later
+        self.test_outputs.append({"test_loss": loss, "test_accuracy": accuracy})
+        return {"test_loss": loss, "test_accuracy": accuracy}
+
+    def on_test_epoch_end(self) -> None:
         """Test epoch end hook."""
         mode = "test"
-        # Cast instead of type: ignore
-        outputs_cast = cast(list[dict[str, torch.Tensor]], outputs)
-
-        loss_mean = sum([o[f"{mode}_loss"] for o in outputs_cast]) / len(outputs_cast)
-        accuracy_mean = sum([o[f"{mode}_accuracy"] for o in outputs_cast]) / len(outputs_cast)
+        loss_mean = torch.stack([x["test_loss"] for x in self.test_outputs]).mean()
+        accuracy_mean = torch.tensor([x["test_accuracy"] for x in self.test_outputs]).mean()
         self.log(f"epoch_{mode}_loss", loss_mean, on_epoch=True, on_step=False)
         self.log(f"epoch_{mode}_accuracy", accuracy_mean, on_epoch=True, on_step=False)
+
+        # Clear the outputs for the next epoch
+        self.test_outputs.clear()
 
 
 def run_probing_model(X: np.ndarray, y: list[int]) -> float:
-    """Run the probing model.
+    """
+    Run the probing model.
 
     :param X: The input data.
     :param y: The labels.

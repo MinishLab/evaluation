@@ -1,0 +1,19 @@
+{
+  "dataset_revision": "1.0.0",
+  "evaluation_time": 0.31610798835754395,
+  "kg_co2_emissions": null,
+  "mteb_version": "1.14.1",
+  "scores": {
+    "test": [
+      {
+        "accuracy": 0.463302752293578,
+        "hf_subset": "default",
+        "languages": [
+          "en"
+        ],
+        "main_score": 0.463302752293578
+      }
+    ]
+  },
+  "task_name": "turney"
+}

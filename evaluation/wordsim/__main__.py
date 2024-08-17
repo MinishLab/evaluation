@@ -7,7 +7,7 @@ from pathlib import Path
 
 from model2vec.logging_config import setup_logging
 
-from evaluation.utilities import Embedder, get_default_argparser, load_embedder
+from evaluation.utilities import get_default_argparser, load_embedder
 from evaluation.wordsim.utilities import calculate_spearman_correlation, create_vocab_and_tasks_dict
 
 logger = logging.getLogger(__name__)

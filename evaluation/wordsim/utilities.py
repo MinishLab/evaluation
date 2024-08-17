@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class TaskDescription(TypedDict):
-    """A description of a task.
+    """
+    A description of a task.
 
     Attributes
     ----------
@@ -31,7 +32,8 @@ class TaskDescription(TypedDict):
 
 
 class Task(TypedDict):
-    """A task.
+    """
+    A task.
 
     Attributes
     ----------
@@ -51,7 +53,8 @@ class Task(TypedDict):
 def create_vocab_and_tasks_dict(
     tasks: list[TaskDescription],
 ) -> tuple[list[str], dict[str, Task]]:
-    """Create a vocabulary and a dictionary of task data from a list of tasks.
+    """
+    Create a vocabulary and a dictionary of task data from a list of tasks.
 
     :param tasks: A list of tasks.
     :return: A tuple containing the vocabulary and a dictionary of task data.
@@ -82,10 +85,11 @@ def create_vocab_and_tasks_dict(
 
 
 def calculate_spearman_correlation(task: Task, embedder: Embedder) -> tuple[float, int]:
-    """Calculate the Spearman correlation between the similarities of word vectors and a target value.
+    """
+    Calculate the Spearman correlation between the similarities of word vectors and a target value.
 
-    :param data: A dictionary containing the words and target values.
-    :param embeddings: A dictionary containing the word embeddings.
+    :param task: The task data.
+    :param embedder: The embedder to use.
     :return: The Spearman correlation
     """
     logger.info(f"Doing task {task['name']}")
