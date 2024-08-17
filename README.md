@@ -1,19 +1,30 @@
-# watertemplate
-Our Cookiecutter template
+# Evaluation
+
+This repository can be used to evaluate word embeddings on several tasks.
 
 ## Usage
-To start a new project, follow the steps below:
 
-1. Replace `PACKAGE` with the name of your project.
-
-2. Run the following make commands to install the project:
+To evaluate a model, run the following command:
 
 ```bash
-make clean install
+python evaluation --model-name <model>
 ```
 
-3. To compile new requirements, run:
+## Tasks
 
-```bash
-make compile
-```
+The following tasks are supported:
+
+### MTEB
+- Classification
+- Clustering
+- PairClassification
+- Reranking
+- Retrieval
+- STS
+- Summarization
+
+### WordSim
+- A number of word similarity tasks
+
+### PEARL
+- The PEARL benchmark
