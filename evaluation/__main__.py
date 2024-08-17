@@ -2,14 +2,11 @@
 from __future__ import annotations
 
 import logging
-
-# from evaluation.pearl.pearl_split import get_pearl_subtasks
 from argparse import ArgumentParser
 
 import mteb
 from model2vec.logging_config import setup_logging
 
-# from evaluation.utilities import get_default_argparser, load_embedder
 from evaluation.pearl.pearl import PEARL
 from evaluation.utilities import CustomMTEB, load_embedder
 from evaluation.wordsim.wordsim import WordSim
@@ -31,7 +28,7 @@ ALL_TASKS_TYPES = (
 
 
 def main() -> None:
-    """Main function for evaluating the MTEB benchmark."""
+    """Main function for evaluating the MTEB benchmark and several custom tasks."""
     parser = ArgumentParser()
     parser.add_argument("--model-path", help="The model to use.", required=True)
     parser.add_argument("--input", action="store_true")
