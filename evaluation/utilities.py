@@ -1,26 +1,21 @@
-from pathlib import Path
-from typing import TypeAlias
-
-from model2vec.model.encoders import StaticEmbedder
-from mteb.abstasks import AbsTask
-from mteb.evaluation import MTEB
-from sentence_transformers import SentenceTransformer
-
-Embedder: TypeAlias = StaticEmbedder | SentenceTransformer
 import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeAlias
 
 import mteb
 import numpy as np
 import pandas as pd
 from huggingface_hub import hf_hub_download, metadata_load
 from model2vec.logging_config import setup_logging
+from model2vec.model.encoders import StaticEmbedder
 from mteb import MTEB_MAIN_EN, get_task
+from mteb.abstasks import AbsTask
+from mteb.evaluation import MTEB
+from sentence_transformers import SentenceTransformer
 
-from evaluation.utilities import Embedder
+Embedder: TypeAlias = StaticEmbedder | SentenceTransformer
 
 _FORBIDDEN_JSONS = ("model_meta.json", "word_sim_benchmarks.json", "pearl_benchmark.json")
 
@@ -28,6 +23,50 @@ _FORBIDDEN_JSONS = ("model_meta.json", "word_sim_benchmarks.json", "pearl_benchm
 setup_logging()
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class DatasetResult:
+    """
+    Scores for a single dataset.
+
+    Attributes
+    ----------
+        scores: The scores for the dataset.
+        time: The time it took to evaluate the dataset.
+
+    """
+
+    scores: list[float]
+    time: float
+
+    def mean(self) -> float:
+        """Calculate the mean of all scores."""
+        return float(np.mean(self.scores))
+
+
+@dataclass
+class ResultSet:
+    """A set of results over multiple datasets."""
+
+    datasets: dict[str, DatasetResult] = field(default_factory=dict)
+
+    def summarize(self, task_subset: str | None = None) -> pd.Series:
+        """Summarize the results by taking the mean of all datasets."""
+        if task_subset is None:
+            return pd.Series({name: result.mean() for name, result in self.datasets.items()})
+
+        result_dict = {}
+        for name in self.datasets:
+            task = mteb.get_task(name)
+            if task.metadata.type == task_subset:
+                result_dict[name] = self.datasets[name].mean()
+
+        return pd.Series(result_dict)
+
+    def times(self) -> dict[str, float]:
+        """Return the evaluation times for all datasets."""
+        return {name: result.time for name, result in self.datasets.items()}
 
 
 class CustomMTEB(MTEB):
@@ -82,50 +121,6 @@ def load_embedder(model_path: str, input_level: bool, word_level: bool, device: 
         name = f"sentencetransformer_{model_name}"
 
     return embedder, name
-
-
-@dataclass
-class DatasetResult:
-    """
-    Scores for a single dataset.
-
-    Attributes
-    ----------
-        scores: The scores for the dataset.
-        time: The time it took to evaluate the dataset.
-
-    """
-
-    scores: list[float]
-    time: float
-
-    def mean(self) -> float:
-        """Calculate the mean of all scores."""
-        return float(np.mean(self.scores))
-
-
-@dataclass
-class ResultSet:
-    """A set of results over multiple datasets."""
-
-    datasets: dict[str, DatasetResult] = field(default_factory=dict)
-
-    def summarize(self, task_subset: str | None = None) -> pd.Series:
-        """Summarize the results by taking the mean of all datasets."""
-        if task_subset is None:
-            return pd.Series({name: result.mean() for name, result in self.datasets.items()})
-
-        result_dict = {}
-        for name in self.datasets:
-            task = mteb.get_task(name)
-            if task.metadata.type == task_subset:
-                result_dict[name] = self.datasets[name].mean()
-
-        return pd.Series(result_dict)
-
-    def times(self) -> dict[str, float]:
-        """Return the evaluation times for all datasets."""
-        return {name: result.time for name, result in self.datasets.items()}
 
 
 def _process_result_data(data: dict[str, Any]) -> DatasetResult:
