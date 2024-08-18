@@ -38,7 +38,7 @@ class PEARL(AbsTask):
             reference=None,
             type=task_type,
             modalities=["text"],
-            eval_splits=["train", "test"],
+            eval_splits=["test"],
             eval_langs=["en"],
             main_score="accuracy",
         )

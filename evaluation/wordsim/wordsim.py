@@ -24,9 +24,9 @@ class WordSim(AbsTaskSTS):
             else "Custom Word Similarity Task with Multiple Datasets.",
             reference=None,
             type="STS",
-            category="p2p",
+            category="s2s",
             modalities=["text"],
-            eval_splits=["train", "test"],
+            eval_splits=["test"],
             eval_langs=["en"],
             main_score="spearman",
             dataset={
