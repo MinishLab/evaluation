@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal, cast
 
 from datasets import DatasetDict, load_dataset
 from mteb import TaskMetadata
@@ -9,7 +9,7 @@ from evaluation.utilities import Embedder
 
 
 class PEARL(AbsTask):
-    def __init__(self, dataset_name: str = None, hf_subsets: Any = None, **kwargs: Any) -> None:
+    def __init__(self, dataset_name: str | None = None, hf_subsets: Any = None, **kwargs: Any) -> None:
         """
         Initialize a PEARL task with the given dataset name.
 
@@ -76,7 +76,7 @@ class PEARL(AbsTask):
         )
 
     def evaluate(
-        self, model: Embedder, split: str = "test", output_folder: str = None, **kwargs: Any
+        self, model: Embedder, split: str = "test", output_folder: str | None = None, **kwargs: Any
     ) -> dict[str, dict[str, float]]:
         """Evaluate the given model on the specified dataset split."""
         dataset_split = self.dataset[split]
@@ -106,7 +106,7 @@ class PEARL(AbsTask):
 
         elif self.metadata.type == "Clustering":
             if self.dataset_name in ["conll", "bc5cdr"]:
-                return eval_clustering(model, dataset_split, name=self.dataset_name)
+                return eval_clustering(model, dataset_split, name=cast(Literal["conll", "bc5cdr"], self.dataset_name))
             else:
                 raise ValueError(f"Unknown clustering dataset: {self.dataset_name}")
 

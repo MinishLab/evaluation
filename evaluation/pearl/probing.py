@@ -63,8 +63,8 @@ class ProbingModel(LightningModule):
         self.test_dataset = test_dataset
 
         # Store validation and test outputs
-        self.validation_outputs = []
-        self.test_outputs = []
+        self.validation_outputs: list[dict[str, Tensor]] = []
+        self.test_outputs: list[dict[str, Tensor]] = []
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass of the model."""
@@ -89,11 +89,11 @@ class ProbingModel(LightningModule):
         """Get the test dataloader."""
         return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False)
 
-    def compute_accuracy(self, y_hat: torch.Tensor, y: torch.Tensor) -> float:
+    def compute_accuracy(self, y_hat: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         """Compute the accuracy of the model."""
         y_pred = (y_hat >= 0.5).long()
         num_correct = (y_pred == y).long().sum().item()
-        accuracy = num_correct / len(y_hat)
+        accuracy = torch.as_tensor(num_correct / len(y_hat))
         return accuracy
 
     def training_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> dict[str, Any]:

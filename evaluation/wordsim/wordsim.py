@@ -7,7 +7,7 @@ from mteb.abstasks import AbsTaskSTS
 
 
 class WordSim(AbsTaskSTS):
-    def __init__(self, dataset_name: str = None, hf_subsets: Any = None, **kwargs: Any) -> None:
+    def __init__(self, dataset_name: str | None = None, hf_subsets: Any = None, **kwargs: Any) -> None:
         """
         Initialize a WordSim task with the given dataset name.
 
@@ -34,7 +34,7 @@ class WordSim(AbsTaskSTS):
                 "revision": "1.0.0",
             },
         )
-        self.dataset_splits = {}
+        self.dataset_splits: dict[str, dict] = {}
 
     @property
     def min_score(self) -> int:
