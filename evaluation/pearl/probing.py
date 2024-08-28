@@ -9,9 +9,6 @@ from torch import LongTensor, Tensor, nn, optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 
-STEP_OUTPUT = Tensor | dict[str, Any]
-EPOCH_OUTPUT = list[STEP_OUTPUT]
-
 
 class ParaphraseDataset(Dataset):
     """Dataset for paraphrase probing task."""
