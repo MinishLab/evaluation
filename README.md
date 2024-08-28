@@ -1,6 +1,6 @@
 # Evaluation
 
-This repository can be used to evaluate word embeddings on several tasks. All tasks are implemented as MTEB tasks and can be run using the same interface.
+This repository can be used to evaluate word embeddings on several tasks. All tasks are implemented as [MTEB](https://github.com/embeddings-benchmark/mteb) tasks and can be run using the same interface.
 
 ## Usage
 
@@ -38,10 +38,8 @@ model = SentenceTransformer(model_name)
 results = evaluation.run(model, eval_splits=["test"], output_folder=f"results/{model_name}")
 ```
 
-Custom embedders can be used by implementing the [Encoder protocol](https://github.com/embeddings-benchmark/mteb/blob/main/mteb/encoder_interface.py#L12) from `MTEB`.
-
-## Supported Tasks
 The following tasks are supported and can be used via the `TaskType` enum:
+```python
 - CLASSIFICATION
 - CLUSTERING
 - PAIRCLASSIFICATION
@@ -51,11 +49,14 @@ The following tasks are supported and can be used via the `TaskType` enum:
 - SUMMARIZATION
 - WORDSIM
 - PEARL
+```
+
+Custom embedders can be used by implementing the [Encoder protocol](https://github.com/embeddings-benchmark/mteb/blob/main/mteb/encoder_interface.py#L12) from `MTEB`.
 
 
-## Task Descriptions
-### MTEB
-The following tasks from [MTEB](https://github.com/embeddings-benchmark/mteb) are supported:
+
+## Supported Tasks
+All tasks from [MTEB](https://github.com/embeddings-benchmark/mteb) are supported:
 - Classification
 - Clustering
 - PairClassification
@@ -73,4 +74,11 @@ All tasks from the [PEARL](https://arxiv.org/pdf/2401.10407) benchmark are suppo
 - Fuzzy Join
 
 ### WordSim
-A collection of single word similarity tasks.
+A collection of single word similarity datasets are supported:
+- RareWord
+- MEN
+- SimLex
+- rel353
+- simverb
+- muturk
+- Card660
