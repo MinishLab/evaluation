@@ -16,7 +16,6 @@ from sentence_transformers import SentenceTransformer
 
 _FORBIDDEN_JSONS = ("model_meta.json", "word_sim_benchmarks.json", "pearl_benchmark.json")
 
-
 logger = logging.getLogger(__name__)
 
 Embedder: TypeAlias = Encoder | SentenceTransformer
