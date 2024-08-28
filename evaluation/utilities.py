@@ -70,7 +70,7 @@ class ResultSet:
 
 
 class CustomMTEB(MTEB):
-    def select_tasks(self, **kwargs: Any) -> None:
+    def select_tasks(self, *args: Any, **kwargs: Any) -> None:
         """Override select_tasks to directly use passed task instances."""
         if self._tasks is not None:
             # Use tasks directly without reinitializing
@@ -83,7 +83,7 @@ class CustomMTEB(MTEB):
             return
 
         # If no tasks are passed, fall back to the original behavior
-        super().select_tasks(**kwargs)
+        super().select_tasks(*args, **kwargs)
 
     @property
     def available_task_types(self) -> set[str]:

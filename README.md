@@ -10,7 +10,7 @@ To evaluate a model, run the following command:
 python evaluation --model-name <model>
 ```
 
-The model can either be a path to a Huggingface sentence transformer, or a path to REACH embeddings.
+The model can either be a path to a Huggingface sentence transformer, or a path to [REACH](https://github.com/stephantul/reach) embeddings.
 
 ## Tasks
 

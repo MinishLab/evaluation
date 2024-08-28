@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 # NOTE: we leave out "Retrieval" because it is too expensive to run.
-ALL_TASKS_TYPES = (
+ALL_TASK_TYPES = (
     "Classification",
     "Clustering",
     "PairClassification",
@@ -35,13 +35,13 @@ def main() -> None:
     parser.add_argument("--word-level", action="store_true")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--suffix", default="")
-    parser.add_argument("--task-types", nargs="+", default=ALL_TASKS_TYPES)
+    parser.add_argument("--task-types", nargs="+", default=ALL_TASK_TYPES)
     args = parser.parse_args()
     embedder, name = load_embedder(args.model_path, args.input, args.word_level, args.device)
 
     # Check that the task types are valid
     for task_type in args.task_types:
-        if task_type not in ALL_TASKS_TYPES:
+        if task_type not in ALL_TASK_TYPES:
             raise ValueError(f"Invalid task type: {task_type}")
 
     # If a suffix is provided, add it to the name

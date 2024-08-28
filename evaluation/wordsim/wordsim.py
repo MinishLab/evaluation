@@ -1,9 +1,12 @@
-import json
+from __future__ import annotations
+
 from typing import Any
 
 import datasets
 from mteb import TaskMetadata
 from mteb.abstasks import AbsTaskSTS
+
+from evaluation.wordsim.tasks import wordsim_tasks
 
 
 class WordSim(AbsTaskSTS):
@@ -30,7 +33,7 @@ class WordSim(AbsTaskSTS):
             eval_langs=["en"],
             main_score="spearman",
             dataset={
-                "path": "evaluation/wordsim/tasks.jsonl",
+                "path": "evaluation/wordsim/tasks.py",
                 "revision": "1.0.0",
             },
         )
@@ -39,7 +42,7 @@ class WordSim(AbsTaskSTS):
     @property
     def min_score(self) -> int:
         """Minimum score for the similarity task."""
-        return 0
+        return -1
 
     @property
     def max_score(self) -> int:
@@ -48,26 +51,20 @@ class WordSim(AbsTaskSTS):
 
     def load_data(self, eval_splits: Any = None) -> None:
         """Load the WordSim datasets."""
-        tasks_file_path = self.metadata.dataset["path"]
-
-        # Load the tasks from the JSONL file
-        with open(tasks_file_path, "r") as file:
-            tasks = [json.loads(line) for line in file]
-
         # Load the data for each task
-        for task in tasks:
+        for task in wordsim_tasks:
             sentence1 = []
             sentence2 = []
             scores = []
 
-            file_path = task["file"]
-            index1 = task["index1"]
-            index2 = task["index2"]
-            target = task["target"]
+            file_path = task.file
+            index1 = task.index1
+            index2 = task.index2
+            target = task.target
 
             with open(file_path, "r") as f:
                 for line in f:
-                    parts = line.strip().split()
+                    parts = line.strip().split("\t")
                     word1 = parts[index1]
                     word2 = parts[index2]
                     similarity = float(parts[target])
@@ -76,7 +73,7 @@ class WordSim(AbsTaskSTS):
                     sentence2.append(word2)
                     scores.append(similarity)
 
-            dataset_name = task["task"]
+            dataset_name = task.task
             self.dataset_splits[dataset_name] = datasets.Dataset.from_dict(
                 {
                     "sentence1": sentence1,
@@ -94,7 +91,7 @@ class WordSim(AbsTaskSTS):
             self.dataset = datasets.DatasetDict(self.dataset_splits)
 
     @classmethod
-    def get_subtasks(cls) -> list["WordSim"]:
+    def get_subtasks(cls) -> list[WordSim]:
         """Return a list of subtasks, one for each dataset."""
         instance = cls()
         instance.load_data()

@@ -5,7 +5,7 @@ import torch
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
-from torch import Tensor, nn, optim
+from torch import LongTensor, Tensor, nn, optim
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 
@@ -16,7 +16,7 @@ EPOCH_OUTPUT = list[STEP_OUTPUT]
 class ParaphraseDataset(Dataset):
     """Dataset for paraphrase probing task."""
 
-    def __init__(self, X: torch.Tensor, label_tensor: torch.Tensor) -> None:
+    def __init__(self, X: Tensor, label_tensor: Tensor) -> None:
         """
         Initialize the dataset.
 
@@ -26,7 +26,7 @@ class ParaphraseDataset(Dataset):
         self.concat_input = X.float()
         self.label = label_tensor.float()
 
-    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, index: int) -> tuple[Tensor, Tensor]:
         """Get the item at the given index."""
         return self.concat_input[index], self.label[index]
 
@@ -66,11 +66,11 @@ class ProbingModel(LightningModule):
         self.validation_outputs: list[dict[str, Tensor]] = []
         self.test_outputs: list[dict[str, Tensor]] = []
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward pass of the model."""
         x1 = F.relu(self.linear(x))
         x2 = self.linear2(x1)
-        output: torch.Tensor = self.output(x2)
+        output: Tensor = self.output(x2)
         return output.reshape((-1,))
 
     def configure_optimizers(self) -> optim.Adam:
@@ -89,14 +89,14 @@ class ProbingModel(LightningModule):
         """Get the test dataloader."""
         return DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False)
 
-    def compute_accuracy(self, y_hat: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+    def compute_accuracy(self, y_hat: Tensor, y: Tensor) -> Tensor:
         """Compute the accuracy of the model."""
         y_pred = (y_hat >= 0.5).long()
         num_correct = (y_pred == y).long().sum().item()
         accuracy = torch.as_tensor(num_correct / len(y_hat))
         return accuracy
 
-    def training_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> dict[str, Any]:
+    def training_step(self, batch: tuple[Tensor, Tensor], batch_nb: int) -> dict[str, Any]:
         """Training step of the model."""
         mode = "train"
         x, y = batch
@@ -105,7 +105,7 @@ class ProbingModel(LightningModule):
         accuracy = self.compute_accuracy(y_hat, y)
         return {f"loss": loss, f"{mode}_accuracy": accuracy}
 
-    def validation_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> dict[str, Any]:
+    def validation_step(self, batch: tuple[Tensor, Tensor], batch_nb: int) -> dict[str, Any]:
         """Validation step of the model."""
         mode = "val"
         x, y = batch
@@ -130,7 +130,7 @@ class ProbingModel(LightningModule):
         # Clear the outputs for the next epoch
         self.validation_outputs.clear()
 
-    def test_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_nb: int) -> dict[str, Any]:
+    def test_step(self, batch: tuple[Tensor, Tensor], batch_nb: int) -> dict[str, Any]:
         """Test step of the model."""
         mode = "test"
         x, y = batch
@@ -167,9 +167,9 @@ def run_probing_model(X: np.ndarray, y: list[int]) -> float:
     X_train, X_to_split, y_train, y_to_split = train_test_split(X, y, test_size=0.2, random_state=42)
     X_test, X_dev, y_test, y_dev = train_test_split(X_to_split, y_to_split, test_size=0.5, random_state=42)
 
-    train_dataset = ParaphraseDataset(torch.from_numpy(X_train), torch.LongTensor(y_train))
-    valid_dataset = ParaphraseDataset(torch.from_numpy(X_dev), torch.LongTensor(y_dev))
-    test_dataset = ParaphraseDataset(torch.from_numpy(X_test), torch.LongTensor(y_test))
+    train_dataset = ParaphraseDataset(torch.from_numpy(X_train), LongTensor(y_train))
+    valid_dataset = ParaphraseDataset(torch.from_numpy(X_dev), LongTensor(y_dev))
+    test_dataset = ParaphraseDataset(torch.from_numpy(X_test), LongTensor(y_test))
 
     model = ProbingModel(
         input_dim=X.shape[1],
