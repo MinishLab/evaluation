@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics.cluster import normalized_mutual_info_score
 
 from evaluation.pearl.probing import run_probing_model
-from evaluation.utilities import Embedder
+from evaluation.utils import Embedder
 
 logger = logging.getLogger(__name__)
 

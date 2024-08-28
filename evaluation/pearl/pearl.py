@@ -7,7 +7,7 @@ from mteb import TaskMetadata
 from mteb.abstasks import AbsTask
 
 from evaluation.pearl.eval import eval_autofj, eval_bird, eval_clustering, eval_ppdb, eval_retrieval, eval_turney
-from evaluation.utilities import Embedder
+from evaluation.utils import Embedder
 
 
 class PEARL(AbsTask):
