@@ -60,7 +60,7 @@ class PEARL(AbsTask):
     def load_data(self, eval_splits: Any = None) -> None:
         """Load the appropriate dataset based on the task name."""
         if self.dataset_name == "umls":
-            dataset = load_dataset("Lihuchen/pearl_benchmark", "kb", split="umls")
+            dataset = load_dataset("Lihuchen/pearl_benchmark", "umls", split="umls")
         else:
             dataset = load_dataset("Lihuchen/pearl_benchmark", self.dataset_name, split="test")
         self.dataset = DatasetDict(
@@ -75,25 +75,27 @@ class PEARL(AbsTask):
         """Evaluate the given model on the specified dataset split."""
         dataset_split = self.dataset[split]
         result = self._evaluate_subset(model, dataset_split)
+
         return {"default": {"accuracy": result, "main_score": result}}
 
     def _evaluate_subset(self, model: Embedder, dataset_split: str, **kwargs: Any) -> float:
         """Evaluate the given model on the specified dataset split."""
-        if self.dataset_name == "bird":
-            return eval_bird(model, dataset_split)
-        elif self.dataset_name == "turney":
-            return eval_turney(model, dataset_split)
-        elif self.dataset_name in ["ppdb", "ppdb_filtered"]:
-            return eval_ppdb(model, dataset_split)
-        elif self.dataset_name in ["yago", "umls"]:
-            kb_dataset = load_dataset("Lihuchen/pearl_benchmark", "kb", split=self.dataset_name)
-            return eval_retrieval(model, kb_dataset, dataset_split)
-        elif self.dataset_name == "autofj":
-            return eval_autofj(model, dataset_split)
-        elif self.dataset_name in ["conll", "bc5cdr"]:
-            return eval_clustering(model, dataset_split, name=cast(Literal["conll", "bc5cdr"], self.dataset_name))
-        else:
-            raise ValueError(f"Unknown dataset: {self.dataset_name}")
+        match self.dataset_name:
+            case "bird":
+                return eval_bird(model, dataset_split)
+            case "turney":
+                return eval_turney(model, dataset_split)
+            case "ppdb" | "ppdb_filtered":
+                return eval_ppdb(model, dataset_split)
+            case "yago" | "umls":
+                kb_dataset = load_dataset("Lihuchen/pearl_benchmark", "kb", split=self.dataset_name)
+                return eval_retrieval(model, kb_dataset, dataset_split)
+            case "autofj":
+                return eval_autofj(model, dataset_split)
+            case "conll" | "bc5cdr":
+                return eval_clustering(model, dataset_split, name=cast(Literal["conll", "bc5cdr"], self.dataset_name))
+            case _:
+                raise ValueError(f"Unknown dataset: {self.dataset_name}")
 
     @classmethod
     def get_subtasks(cls) -> list[PEARL]:
