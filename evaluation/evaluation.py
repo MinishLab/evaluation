@@ -58,12 +58,13 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
     :return: The MTEB tasks that match the provided task types.
     :raises ValueError: If any task types are invalid.
     """
+    all_task_types = list(TaskType)
     # If no task types are provided, default to all task types
     if task_types is None:
-        task_types = list(TaskType)
+        task_types = all_task_types
     else:
         # Validate that all items in task_types are in TaskType
-        invalid_types = [task for task in task_types if task not in list(TaskType)]
+        invalid_types = [task for task in task_types if task not in all_task_types]
         if invalid_types:
             supported_types = ", ".join([t.name for t in TaskType])
             raise ValueError(
@@ -71,9 +72,11 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
                 f"All task types must be instances of TaskType. "
                 f"Supported task types are: {supported_types}"
             )
+        # Convert to a list of TaskType instances
+        task_types = [TaskType(task_type) for task_type in task_types]
 
     # Get the MTEB tasks that match the provided task types
-    allowed_task_types = [TaskType(task_type).value for task_type in task_types]
+    allowed_task_types = [task_type.value for task_type in task_types]
     tasks = [
         task
         for task in (mteb.get_task(task_name) for task_name in mteb.MTEB_MAIN_EN.tasks)
