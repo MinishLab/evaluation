@@ -76,11 +76,10 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
         task_types = [TaskType(task_type) for task_type in task_types]
 
     # Get the MTEB tasks that match the provided task types
-    allowed_task_types = [task_type.value for task_type in task_types]
     tasks = [
         task
         for task in (mteb.get_task(task_name) for task_name in mteb.MTEB_MAIN_EN.tasks)
-        if task.metadata.type in allowed_task_types
+        if task.metadata.type in task_types
     ]
 
     # If WordSim is in the task types, add the WordSim subtasks
