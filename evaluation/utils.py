@@ -2,7 +2,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import Any
 
 import click
 import mteb
@@ -10,15 +10,11 @@ import numpy as np
 import pandas as pd
 from huggingface_hub import hf_hub_download, metadata_load
 from mteb import MTEB_MAIN_EN, get_task
-from mteb.encoder_interface import Encoder
 from rich.logging import RichHandler
-from sentence_transformers import SentenceTransformer
 
 _FORBIDDEN_JSONS = ("model_meta.json", "word_sim_benchmarks.json", "pearl_benchmark.json")
 
 logger = logging.getLogger(__name__)
-
-Embedder: TypeAlias = Encoder | SentenceTransformer
 
 
 @dataclass

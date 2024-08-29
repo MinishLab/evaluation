@@ -5,9 +5,9 @@ from typing import Any, Literal, cast
 from datasets import DatasetDict, load_dataset
 from mteb import TaskMetadata
 from mteb.abstasks import AbsTask
+from mteb.encoder_interface import Encoder
 
 from evaluation.pearl.eval import eval_autofj, eval_bird, eval_clustering, eval_ppdb, eval_retrieval, eval_turney
-from evaluation.utils import Embedder
 
 
 class PEARL(AbsTask):
@@ -70,7 +70,7 @@ class PEARL(AbsTask):
         )
 
     def evaluate(
-        self, model: Embedder, split: str = "test", output_folder: str | None = None, **kwargs: Any
+        self, model: Encoder, split: str = "test", output_folder: str | None = None, **kwargs: Any
     ) -> dict[str, dict[str, float]]:
         """Evaluate the given model on the specified dataset split."""
         dataset_split = self.dataset[split]
@@ -78,7 +78,7 @@ class PEARL(AbsTask):
 
         return {"default": {"accuracy": result, "main_score": result}}
 
-    def _evaluate_subset(self, model: Embedder, dataset_split: str, **kwargs: Any) -> float:
+    def _evaluate_subset(self, model: Encoder, dataset_split: str, **kwargs: Any) -> float:
         """Evaluate the given model on the specified dataset split."""
         match self.dataset_name:
             case "bird":
