@@ -62,10 +62,8 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
     if task_types is None:
         task_types = list(TaskType)
     else:
-        # Validate that all items in task_types are instances of TaskType or valid task type strings
-        invalid_types = [
-            task for task in task_types if not isinstance(task, TaskType) and task not in TaskType._value2member_map_
-        ]
+        # Validate that all items in task_types are in TaskType
+        invalid_types = [task for task in task_types if task not in list(TaskType)]
         if invalid_types:
             supported_types = ", ".join([t.name for t in TaskType])
             raise ValueError(
@@ -75,10 +73,7 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
             )
 
     # Get the MTEB tasks that match the provided task types
-    allowed_task_types: set[str] = {
-        task_type.value if isinstance(task_type, TaskType) else task_type for task_type in task_types
-    }
-
+    allowed_task_types = [TaskType(task_type).value for task_type in task_types]
     tasks = [
         task
         for task in (mteb.get_task(task_name) for task_name in mteb.MTEB_MAIN_EN.tasks)
