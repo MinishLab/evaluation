@@ -50,6 +50,7 @@ The following tasks are supported and can be used via the `TaskType` enum:
 - WORDSIM
 - PEARL
 ```
+Alternatively, the task types can also be specified as a list of strings, e.g. `task_types=["Classification", "WordSim"]`.
 
 Custom embedders can be used by implementing the [Encoder protocol](https://github.com/embeddings-benchmark/mteb/blob/main/mteb/encoder_interface.py#L12) from `MTEB`.
 
