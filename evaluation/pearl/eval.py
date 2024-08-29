@@ -4,18 +4,18 @@ from typing import Literal, cast
 import numpy as np
 from autofj.datasets import load_data
 from datasets import Dataset
+from mteb.encoder_interface import Encoder
 from reach import Reach, normalize
 from scipy.stats import pearsonr
 from sklearn.cluster import KMeans
 from sklearn.metrics.cluster import normalized_mutual_info_score
 
 from evaluation.pearl.probing import run_probing_model
-from evaluation.utilities import Embedder
 
 logger = logging.getLogger(__name__)
 
 
-def eval_bird(model: Embedder, dataset: Dataset) -> float:
+def eval_bird(model: Encoder, dataset: Dataset) -> float:
     """
     Evaluate the BIRD dataset.
 
@@ -33,7 +33,7 @@ def eval_bird(model: Embedder, dataset: Dataset) -> float:
     return cor
 
 
-def eval_turney(model: Embedder, dataset: Dataset) -> float:
+def eval_turney(model: Encoder, dataset: Dataset) -> float:
     """
     Evaluate the Turney dataset.
 
@@ -71,7 +71,7 @@ def eval_turney(model: Embedder, dataset: Dataset) -> float:
     return accuracy
 
 
-def eval_ppdb(model: Embedder, dataset: Dataset) -> float:
+def eval_ppdb(model: Encoder, dataset: Dataset) -> float:
     """
     Evaluate the PPDB dataset.
 
@@ -88,7 +88,7 @@ def eval_ppdb(model: Embedder, dataset: Dataset) -> float:
     return score
 
 
-def eval_clustering(model: Embedder, dataset: Dataset, name: Literal["conll", "bc5cdr"]) -> float:
+def eval_clustering(model: Encoder, dataset: Dataset, name: Literal["conll", "bc5cdr"]) -> float:
     """
     Evaluate the clustering dataset.
 
@@ -121,7 +121,7 @@ def eval_clustering(model: Embedder, dataset: Dataset, name: Literal["conll", "b
     return nmi_score
 
 
-def eval_retrieval(model: Embedder, kb_dataset: Dataset, test_dataset: Dataset) -> float:
+def eval_retrieval(model: Encoder, kb_dataset: Dataset, test_dataset: Dataset) -> float:
     """
     Evaluate the retrieval dataset.
 
@@ -152,7 +152,7 @@ def eval_retrieval(model: Embedder, kb_dataset: Dataset, test_dataset: Dataset) 
     return acc
 
 
-def eval_single_autofj(dataset_name: str, model: Embedder) -> float:
+def eval_single_autofj(dataset_name: str, model: Encoder) -> float:
     """
     Evaluate a single dataset from the AutoFJ benchmark.
 
@@ -188,7 +188,7 @@ def eval_single_autofj(dataset_name: str, model: Embedder) -> float:
     return acc_cnt * 1.0 / total
 
 
-def eval_autofj(model: Embedder, dataset: Dataset) -> float:
+def eval_autofj(model: Encoder, dataset: Dataset) -> float:
     """
     Evaluate the AutoFJ benchmark.
 
