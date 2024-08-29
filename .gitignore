@@ -1,5 +1,7 @@
 # User specific files
-.local/
+local/
+lightning_logs/
+results/
 .vscode/
 .DS_store
 

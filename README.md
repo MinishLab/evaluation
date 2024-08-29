@@ -1,19 +1,38 @@
-# watertemplate
-Our Cookiecutter template
+# Evaluation
+
+This repository can be used to evaluate word embeddings on several tasks. All tasks are implemented as MTEB tasks and can be run using the same interface.
 
 ## Usage
-To start a new project, follow the steps below:
 
-1. Replace `PACKAGE` with the name of your project.
-
-2. Run the following make commands to install the project:
+To evaluate a model, run the following command:
 
 ```bash
-make clean install
+python evaluation --model-name <model>
 ```
 
-3. To compile new requirements, run:
+The model can either be a path to a Huggingface sentence transformer, or a path to [REACH](https://github.com/stephantul/reach) embeddings.
 
-```bash
-make compile
-```
+## Tasks
+
+The following tasks are supported:
+
+### MTEB
+All tasks in [MTEB](https://github.com/embeddings-benchmark/mteb) are supported:
+- Classification
+- Clustering
+- PairClassification
+- Reranking
+- Retrieval
+- STS
+- Summarization
+
+### WordSim
+- A collection of single word similarity tasks
+
+### PEARL
+The [PEARL](https://arxiv.org/pdf/2401.10407) benchmark:
+- Paraphrase Classification
+- Phrase Similarity
+- Entity Retrieval
+- Entity Clustering
+- Fuzzy Join

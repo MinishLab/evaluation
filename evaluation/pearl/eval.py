@@ -1,25 +1,23 @@
-import json
 import logging
-from pathlib import Path
 from typing import Literal, cast
 
 import numpy as np
 from autofj.datasets import load_data
-from datasets import Dataset, load_dataset
-from model2vec.logging_config import setup_logging
+from datasets import Dataset
 from reach import Reach, normalize
 from scipy.stats import pearsonr
 from sklearn.cluster import KMeans
 from sklearn.metrics.cluster import normalized_mutual_info_score
 
 from evaluation.pearl.probing import run_probing_model
-from evaluation.utilities import Embedder, get_default_argparser, load_embedder
+from evaluation.utilities import Embedder
 
 logger = logging.getLogger(__name__)
 
 
 def eval_bird(model: Embedder, dataset: Dataset) -> float:
-    """Evaluate the BIRD dataset.
+    """
+    Evaluate the BIRD dataset.
 
     :param model: The model to evaluate.
     :param dataset: The dataset to evaluate.
@@ -36,7 +34,8 @@ def eval_bird(model: Embedder, dataset: Dataset) -> float:
 
 
 def eval_turney(model: Embedder, dataset: Dataset) -> float:
-    """Evaluate the Turney dataset.
+    """
+    Evaluate the Turney dataset.
 
     :param model: The model to evaluate.
     :param dataset: The dataset to evaluate.
@@ -73,7 +72,8 @@ def eval_turney(model: Embedder, dataset: Dataset) -> float:
 
 
 def eval_ppdb(model: Embedder, dataset: Dataset) -> float:
-    """Evaluate the PPDB dataset.
+    """
+    Evaluate the PPDB dataset.
 
     :param model: The model to evaluate.
     :param dataset: The dataset to evaluate.
@@ -89,12 +89,14 @@ def eval_ppdb(model: Embedder, dataset: Dataset) -> float:
 
 
 def eval_clustering(model: Embedder, dataset: Dataset, name: Literal["conll", "bc5cdr"]) -> float:
-    """Evaluate the clustering dataset.
+    """
+    Evaluate the clustering dataset.
 
     :param model: The model to evaluate.
     :param dataset: The dataset to evaluate.
     :param name: The name of the dataset. Can be "conll" or "bc5cdr".
     :return: The normalized mutual information score of the model on the dataset.
+    :raises ValueError: If the dataset name is invalid.
     """
     label_dict = dict()
     match name:
@@ -120,7 +122,8 @@ def eval_clustering(model: Embedder, dataset: Dataset, name: Literal["conll", "b
 
 
 def eval_retrieval(model: Embedder, kb_dataset: Dataset, test_dataset: Dataset) -> float:
-    """Evaluate the retrieval dataset.
+    """
+    Evaluate the retrieval dataset.
 
     :param model: The model to evaluate.
     :param kb_dataset: The dataset containing the knowledge base.
@@ -150,7 +153,8 @@ def eval_retrieval(model: Embedder, kb_dataset: Dataset, test_dataset: Dataset) 
 
 
 def eval_single_autofj(dataset_name: str, model: Embedder) -> float:
-    """Evaluate a single dataset from the AutoFJ benchmark.
+    """
+    Evaluate a single dataset from the AutoFJ benchmark.
 
     :param dataset_name: The name of the dataset to evaluate.
     :param model: The model to evaluate.
@@ -185,7 +189,8 @@ def eval_single_autofj(dataset_name: str, model: Embedder) -> float:
 
 
 def eval_autofj(model: Embedder, dataset: Dataset) -> float:
-    """Evaluate the AutoFJ benchmark.
+    """
+    Evaluate the AutoFJ benchmark.
 
     :param model: The model to evaluate.
     :param dataset: The dataset to evaluate.
@@ -197,81 +202,3 @@ def eval_autofj(model: Embedder, dataset: Dataset) -> float:
         acc_list.append(eval_single_autofj(dataset_name=table_name, model=model))
 
     return sum(acc_list) / len(acc_list)
-
-
-def load_entity(entity_path: str) -> dict[str, list[str]]:
-    """Load the entity names from a file.
-
-    :param entity_path: The path to the entity file.
-    :return: The entity names.
-    """
-    e_names = []
-    for line in open(entity_path, encoding="utf8"):
-        e_names.append(line.strip())
-    return {"mention": e_names, "entity": e_names}
-
-
-def main() -> None:
-    """Main function to evaluate the model on the PEARL benchmark."""
-    parser = get_default_argparser()
-    args = parser.parse_args()
-
-    embedder, name = load_embedder(args.model_path, args.input, args.word_level, args.device)
-
-    ppdb_dataset = load_dataset("Lihuchen/pearl_benchmark", "ppdb", split="test")
-    ppbd_score = eval_ppdb(embedder, ppdb_dataset)
-
-    ppdb_filtered_dataset = load_dataset("Lihuchen/pearl_benchmark", "ppdb_filtered", split="test")
-    ppbd_filtered_score = eval_ppdb(embedder, ppdb_filtered_dataset)
-
-    turney_dataset = load_dataset("Lihuchen/pearl_benchmark", "turney", split="test")
-    turney_score = eval_turney(embedder, turney_dataset)
-    bird_dataset = load_dataset("Lihuchen/pearl_benchmark", "bird", split="test")
-    bird_score = eval_bird(embedder, bird_dataset)
-
-    yago_kb_dataset = load_dataset("Lihuchen/pearl_benchmark", "kb", split="yago")
-    yago_test_dataset = load_dataset("Lihuchen/pearl_benchmark", "yago", split="test")
-    yago_score = eval_retrieval(embedder, yago_kb_dataset, yago_test_dataset)
-
-    umls_kb_dataset = load_dataset("Lihuchen/pearl_benchmark", "kb", split="umls")
-    umls_test_dataset = load_dataset("Lihuchen/pearl_benchmark", "umls", split="umls")
-    umls_score = eval_retrieval(embedder, umls_kb_dataset, umls_test_dataset)
-
-    conll_dataset = load_dataset("Lihuchen/pearl_benchmark", "conll", split="test")
-    conll_score = eval_clustering(embedder, conll_dataset, name="conll")
-
-    bc5cdr_dataset = load_dataset("Lihuchen/pearl_benchmark", "bc5cdr", split="test")
-    bc5cdr_score = eval_clustering(embedder, bc5cdr_dataset, name="bc5cdr")
-
-    autofj_dataset = load_dataset("Lihuchen/pearl_benchmark", "autofj", split="test")
-    autofj_score = eval_autofj(embedder, autofj_dataset)
-
-    task_scores = {
-        "ppdb": ppbd_score,
-        "ppdb_filtered": ppbd_filtered_score,
-        "turney": turney_score,
-        "bird": bird_score,
-        "yago": yago_score,
-        "conll": conll_score,
-        "bc5cdr": bc5cdr_score,
-        "autofj": autofj_score,
-        "umls": umls_score,
-    }
-
-    if args.suffix:
-        name = f"{name}_{args.suffix}"
-
-    # Create the results directory if it does not exist
-    Path(f"results/{name}").mkdir(parents=True, exist_ok=True)
-
-    # Save the scores json to a file
-    with open(f"results/{name}/pearl_benchmark.json", "w") as file:
-        json.dump(task_scores, file, indent=4)
-
-    logger.info(task_scores)
-    logger.info(f"Results saved to results/{name}/pearl_benchmark.json")
-
-
-if __name__ == "__main__":
-    setup_logging()
-    main()
