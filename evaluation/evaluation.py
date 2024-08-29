@@ -12,13 +12,14 @@ from evaluation.wordsim.wordsim import WordSim
 logger = logging.getLogger(__name__)
 
 
-class TaskType(Enum):
+class TaskType(str, Enum):
     """Enum for the different supported task types."""
 
     CLASSIFICATION = "Classification"
     CLUSTERING = "Clustering"
     PAIRCLASSIFICATION = "PairClassification"
     RERANKING = "Reranking"
+    RETRIEVAL = "Retrieval"
     STS = "STS"
     SUMMARIZATION = "Summarization"
     PEARL = "PEARL"
@@ -29,6 +30,9 @@ class CustomMTEB(MTEB):
     def select_tasks(self, *args: Any, **kwargs: Any) -> None:
         """Override select_tasks to directly use passed task instances."""
         if self._tasks is not None:
+            # If any args or kwargs are passed, log a warning
+            if args or kwargs:
+                logger.warning("Ignoring passed arguments and using provided tasks directly.")
             # Use tasks directly without reinitializing
             self.tasks = [task for task in self._tasks if isinstance(task, AbsTask)]
             # Initialize tasks_cls with the classes of the provided tasks
@@ -36,15 +40,14 @@ class CustomMTEB(MTEB):
             if len(self.tasks) != len(self._tasks):
                 task_names = [task.metadata_dict["name"] for task in self.tasks]
                 logger.warning(f"Some tasks may not have been initialized correctly: {task_names}")
-            return
-
-        # If no tasks are passed, fall back to the original behavior
-        super().select_tasks(*args, **kwargs)
+        else:
+            # If no tasks are passed, fall back to the original behavior
+            super().select_tasks(*args, **kwargs)
 
     @property
     def available_task_types(self) -> set[str]:
         """Override to ensure task types are gathered from the instances."""
-        return {task.metadata_dict["type"] for task in self.tasks}
+        return {task.metadata.type for task in self.tasks}
 
 
 def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
@@ -59,8 +62,10 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
     if task_types is None:
         task_types = list(TaskType)
     else:
-        # Validate that all items in task_types are instances of TaskType
-        invalid_types = [task for task in task_types if not isinstance(task, TaskType)]
+        # Validate that all items in task_types are instances of TaskType or valid task type strings
+        invalid_types = [
+            task for task in task_types if not isinstance(task, TaskType) and task not in TaskType._value2member_map_
+        ]
         if invalid_types:
             supported_types = ", ".join([t.name for t in TaskType])
             raise ValueError(
@@ -70,12 +75,15 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
             )
 
     # Get the MTEB tasks that match the provided task types
-    task_names = [
+    allowed_task_types: set[str] = {
+        task_type.value if isinstance(task_type, TaskType) else task_type for task_type in task_types
+    }
+
+    tasks = [
         task
-        for task in mteb.MTEB_MAIN_EN.tasks
-        if mteb.get_task(task).metadata.type in [task_type.value for task_type in task_types]
+        for task in (mteb.get_task(task_name) for task_name in mteb.MTEB_MAIN_EN.tasks)
+        if task.metadata.type in allowed_task_types
     ]
-    tasks = [mteb.get_task(task) for task in task_names]
 
     # If WordSim is in the task types, add the WordSim subtasks
     if TaskType.WORDSIM in task_types:

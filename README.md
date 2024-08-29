@@ -66,7 +66,7 @@ All tasks from [MTEB](https://github.com/embeddings-benchmark/mteb) are supporte
 - Summarization
 
 ### PEARL
-All tasks from the [PEARL](https://arxiv.org/pdf/2401.10407) benchmark are supported:
+All tasks from the [PEARL paper](https://arxiv.org/pdf/2401.10407) benchmark are supported (PEARL codebase [here](https://github.com/tigerchen52/PEARL)):
 - Paraphrase Classification
 - Phrase Similarity
 - Entity Retrieval
