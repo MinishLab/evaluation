@@ -50,7 +50,7 @@ class CustomMTEB(MTEB):
         return {task.metadata.type for task in self.tasks}
 
 
-def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
+def get_tasks(task_types: list[TaskType | str] | None = None) -> list[AbsTask]:
     """
     Get the MTEB tasks that match the provided task types.
 
@@ -58,10 +58,13 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
     :return: The MTEB tasks that match the provided task types.
     :raises ValueError: If any task types are invalid.
     """
+    from typing import cast
+
     all_task_types = list(TaskType)
     # If no task types are provided, default to all task types
     if task_types is None:
-        task_types = all_task_types
+        task_types = cast(list[TaskType | str], all_task_types)
+        # task_types = all_task_types
     else:
         # Validate that all items in task_types are in TaskType
         invalid_types = [task for task in task_types if task not in all_task_types]
