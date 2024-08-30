@@ -58,12 +58,10 @@ def get_tasks(task_types: list[TaskType | str] | None = None) -> list[AbsTask]:
     :return: The MTEB tasks that match the provided task types.
     :raises ValueError: If any task types are invalid.
     """
-    # all_task_types: list[TaskType | str] = list(TaskType)
     all_task_types = list(TaskType)
     # If no task types are provided, default to all task types
     if task_types is None:
         valid_task_types = all_task_types
-        # task_types = cast(list[TaskType | str], all_task_types)
     else:
         # Validate that all items in task_types are in TaskType
         invalid_types = [task for task in task_types if task not in all_task_types]
