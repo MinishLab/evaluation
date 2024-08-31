@@ -5,6 +5,7 @@ from unittest.mock import create_autospec
 import pytest
 import torch
 from mteb.encoder_interface import Encoder
+from mteb.model_meta import ModelMeta
 
 from evaluation import CustomMTEB, TaskType, get_tasks
 
@@ -22,6 +23,11 @@ def mock_encoder() -> Encoder:
     # Set the side effect of the mock
     mock_encoder.encode.side_effect = mock_encode
 
+    # Set the model meta
+    mock_encoder.mteb_model_meta = ModelMeta(
+        name="mock_model_name", revision="mock_revision", release_date=None, languages=None
+    )
+
     return mock_encoder
 
 
@@ -37,7 +43,8 @@ def test_evaluation(mock_encoder: Encoder, tmp_path: Path) -> None:
 
     # Assert that the results folder contains the results for all tasks
     task_names = [task.metadata.name for task in tasks]
-    result_folder = tmp_path / "no_model_name_available" / "no_revision_available"
+    result_folder = tmp_path / mock_encoder.mteb_model_meta.name / mock_encoder.mteb_model_meta.revision
+
     assert all(
         (result_folder / f"{task_name}.json").exists() for task_name in task_names
     ), "All result files for the specified tasks should exist."
