@@ -52,9 +52,9 @@ def test_evaluation(mock_encoder: Encoder, tmp_path: Path) -> None:
     # Ensure that get_tasks without any arguments works
     get_tasks()
 
-    # Ensure that loading tasks with a string works
+    # Ensure that get_tasks with a string works
     get_tasks(["WordSim"])
 
-    # Ensure that loading tasks with a non-existent task name raises an error
+    # Ensure that get_tasks with a non-existent task name raises an error
     with pytest.raises(ValueError):
         get_tasks(["non_existent_task"])
