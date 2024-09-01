@@ -9,8 +9,7 @@ To run the evaluation on all available tasks and summarize the results, the foll
 ```python
 from sentence_transformers import SentenceTransformer
 
-from evaluation import CustomMTEB, get_tasks
-from evaluation.utils import parse_mteb_results, print_leaderboard, summarize_results
+from evaluation import CustomMTEB, get_tasks, parse_mteb_results, print_leaderboard, summarize_results
 
 # Define the model name
 model_name = "average_word_embeddings_komninos"
@@ -74,7 +73,7 @@ Custom embedders can be used by implementing the [Encoder protocol](https://gith
 The `summarize_results` function can be used to summarize results from an existing results folder, e.g.:
 
 ```python
-from evaluation.utils import load_results, print_leaderboard, summarize_results
+from evaluation import load_results, print_leaderboard, summarize_results
 
 # To summarize all models in a results folder:
 results = load_results("results/")

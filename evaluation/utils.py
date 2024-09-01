@@ -193,8 +193,6 @@ def print_leaderboard(task_scores: dict[str, pd.DataFrame]) -> None:
     for task_subset, scores in task_scores.items():
         leaderboard[task_subset] = scores.loc["mean"]
 
-    # # Calculate the overall mean
-    # leaderboard["Average"] = leaderboard.mean(axis=1)
     # Calculate the overall mean for all tasks
     leaderboard["Average (All)"] = leaderboard.mean(axis=1)
 

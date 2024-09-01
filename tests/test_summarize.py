@@ -2,8 +2,15 @@ from pathlib import Path
 
 from mteb.encoder_interface import Encoder
 
-from evaluation import CustomMTEB, TaskType, get_tasks
-from evaluation.utils import load_results, parse_mteb_results, print_leaderboard, summarize_results
+from evaluation import (
+    CustomMTEB,
+    TaskType,
+    get_tasks,
+    load_results,
+    parse_mteb_results,
+    print_leaderboard,
+    summarize_results,
+)
 
 
 def test_summarize(mock_encoder: Encoder, tmp_path: Path) -> None:
