@@ -193,14 +193,20 @@ def print_leaderboard(task_scores: dict[str, pd.DataFrame]) -> None:
     for task_subset, scores in task_scores.items():
         leaderboard[task_subset] = scores.loc["mean"]
 
-    # Calculate the overall mean
-    leaderboard["Average"] = leaderboard.mean(axis=1)
+    # # Calculate the overall mean
+    # leaderboard["Average"] = leaderboard.mean(axis=1)
+    # Calculate the overall mean for all tasks
+    leaderboard["Average (All)"] = leaderboard.mean(axis=1)
+
+    # Calculate the overall mean for MTEB tasks (excluding PEARL and WordSim)
+    mteb_tasks = [col for col in leaderboard.columns if col not in {"PEARL", "WordSim", "Average (All)"}]
+    leaderboard["Average (MTEB)"] = leaderboard[mteb_tasks].mean(axis=1)
 
     # Replace NaN values with "N/A"
     leaderboard = leaderboard.fillna("N/A")
 
     # Sort the leaderboard by the Average (ignoring N/A values)
-    leaderboard = leaderboard.sort_values(by="Average", ascending=False)
+    leaderboard = leaderboard.sort_values(by="Average (All)", ascending=False)
 
     # Reset the index to make the model names a column
     leaderboard = leaderboard.reset_index()
