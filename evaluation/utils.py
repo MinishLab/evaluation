@@ -202,4 +202,10 @@ def print_leaderboard(task_scores: dict[str, pd.DataFrame]) -> None:
     # Sort the leaderboard by the overall mean (ignoring N/A values)
     leaderboard = leaderboard.sort_values(by="Overall Mean", ascending=False)
 
-    print(leaderboard.reset_index().to_markdown(index=False))  # noqa: T201
+    # Reset the index to make the model names a column
+    leaderboard = leaderboard.reset_index()
+
+    # Rename the index column to "Model"
+    leaderboard.rename(columns={leaderboard.columns[0]: "Model"}, inplace=True)
+
+    print(leaderboard.to_markdown(index=False))  # noqa: T201
