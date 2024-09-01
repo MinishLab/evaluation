@@ -57,6 +57,10 @@ class PEARL(AbsTask):
         # Initialize the parent class after setting the metadata
         super().__init__(hf_subsets=hf_subsets, **kwargs)
 
+    def _calculate_metrics_from_split(self) -> None:
+        """Calculate the metrics from the dataset split."""
+        raise NotImplementedError("Method not implemented")
+
     def load_data(self, eval_splits: Any = None) -> None:
         """Load the appropriate dataset based on the task name."""
         if self.dataset_name == "umls":

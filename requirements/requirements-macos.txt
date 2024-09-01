@@ -27,7 +27,7 @@ catalogue==2.0.10
     #   spacy
     #   srsly
     #   thinc
-certifi==2024.7.4
+certifi==2024.8.30
     # via requests
 cfgv==3.4.0
     # via pre-commit
@@ -38,7 +38,7 @@ click==8.1.7
     #   black
     #   nltk
     #   typer
-cloudpathlib==0.18.1
+cloudpathlib==0.19.0
     # via weasel
 confection==0.1.5
     # via
@@ -105,7 +105,7 @@ idna==3.8
     #   yarl
 iniconfig==2.0.0
     # via pytest
-ipython==8.26.0
+ipython==8.27.0
     # via evaluation (pyproject.toml)
 jedi==0.19.1
     # via ipython
@@ -139,7 +139,7 @@ mdurl==0.1.2
     # via markdown-it-py
 mpmath==1.3.0
     # via sympy
-mteb==1.14.12
+mteb==1.14.13
     # via evaluation (pyproject.toml)
 multidict==6.0.5
     # via
@@ -215,7 +215,7 @@ platformdirs==4.2.2
     #   virtualenv
 pluggy==1.5.0
     # via pytest
-polars==1.5.0
+polars==1.6.0
     # via mteb
 pre-commit==3.8.0
     # via evaluation (pyproject.toml)
@@ -287,7 +287,7 @@ rich==13.8.0
     # via
     #   mteb
     #   typer
-ruff==0.6.2
+ruff==0.6.3
     # via evaluation (pyproject.toml)
 safetensors==0.4.4
     # via transformers
@@ -336,6 +336,8 @@ stack-data==0.6.3
     # via ipython
 sympy==1.13.2
     # via torch
+tabulate==0.9.0
+    # via evaluation (pyproject.toml)
 thinc==8.2.5
     # via spacy
 threadpoolctl==3.5.0
@@ -411,5 +413,5 @@ wrapt==1.16.0
     # via smart-open
 xxhash==3.5.0
     # via datasets
-yarl==1.9.4
+yarl==1.9.6
     # via aiohttp
