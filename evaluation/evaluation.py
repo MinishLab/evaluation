@@ -6,8 +6,8 @@ import mteb
 from mteb.abstasks import AbsTask
 from mteb.evaluation import MTEB
 
-from evaluation.pearl.pearl import PEARL
-from evaluation.wordsim.wordsim import WordSim
+from evaluation.pearl import PEARL
+from evaluation.wordsim import WordSim
 
 logger = logging.getLogger(__name__)
 

@@ -8,11 +8,14 @@ import click
 import mteb
 import numpy as np
 import pandas as pd
-from huggingface_hub import hf_hub_download, metadata_load
-from mteb import MTEB_MAIN_EN, get_task
+from mteb.load_results import MTEBResults
 from rich.logging import RichHandler
 
+from evaluation import TaskType, get_tasks
+
 _FORBIDDEN_JSONS = ("model_meta.json", "word_sim_benchmarks.json", "pearl_benchmark.json")
+CUSTOM_TASKS = get_tasks(["WordSim", "PEARL"])
+CUSTOM_TASK_TO_NAME_MAPPING = {task.metadata.name: task for task in CUSTOM_TASKS}
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +29,13 @@ class DatasetResult:
     ----------
         scores: The scores for the dataset.
         time: The time it took to evaluate the dataset.
+        metrics: The metrics for the dataset.
 
     """
 
     scores: list[float]
     time: float
+    metrics: dict[str, float] = field(default_factory=dict)
 
     def mean(self) -> float:
         """Calculate the mean of all scores."""
@@ -49,10 +54,15 @@ class ResultSet:
             return pd.Series({name: result.mean() for name, result in self.datasets.items()})
 
         result_dict = {}
-        for name in self.datasets:
-            task = mteb.get_task(name)
-            if task.metadata.type == task_subset:
-                result_dict[name] = self.datasets[name].mean()
+        for name, result in self.datasets.items():
+            if name not in CUSTOM_TASK_TO_NAME_MAPPING:
+                task = mteb.get_task(name)
+                if task.metadata.type == task_subset:
+                    result_dict[name] = result.mean()
+            else:
+                if task_subset in {"WordSim", "PEARL"}:
+                    task = CUSTOM_TASK_TO_NAME_MAPPING[name]
+                    result_dict[name] = result.mean()
 
         return pd.Series(result_dict)
 
@@ -105,46 +115,105 @@ def get_results_model_folder(model_name_path: Path) -> ResultSet:
     return result
 
 
-def get_results_from_hub(model_name: str) -> ResultSet | None:
+def load_results(
+    results_dir: str | Path,
+) -> dict[str, ResultSet]:
     """
-    Get the results from the model hub.
+    Load results from the specified directory.
 
-    :param model_name: The name of the model on the model hub.
-    :return: The results.
+    :param results_dir: The root directory containing results for all models or a specific model directory.
+    :return: A dictionary of model names to ResultSet objects.
     """
-    readme = hf_hub_download(model_name, filename="README.md")
-    try:
-        results: list[dict[str, Any]] = metadata_load(readme)["model-index"][0]["results"]
-    except KeyError:
-        return None
+    results = {}
+    results_path = Path(results_dir)
 
+    # Determine if results_dir is a specific model directory or contains multiple model directories
+    if (results_path / "model_meta.json").exists() or any(results_path.glob("*.json")):
+        # If the directory contains model result files directly, treat it as a specific model directory
+        model_name = results_path.parent.name  # Use the parent directory's name as the model_name
+        results[model_name] = get_results_model_folder(results_path)
+    else:
+        # Otherwise, treat it as a directory containing multiple model directories
+        for model_name_path in results_path.iterdir():
+            if model_name_path.is_dir():
+                name = model_name_path.name
+                results[name] = get_results_model_folder(model_name_path)
+
+    return results
+
+
+def summarize_results(
+    results: dict[str, ResultSet],
+) -> dict[str, pd.DataFrame]:
+    """Summarize the results by task subset, optionally comparing against a baseline."""
+    # summaries = {}
+
+    # summaries = {model_name: result_set.summarize() for model_name, result_set in results.items()}
+    # if task_subsets:
+    # task_scores = {}
+    # for task_subset in task_subsets:
+    #     task_scores[task_subset] = summarize_task_subset(results, task_subset)
+
+    # return task_scores
+    task_types = [task.value for task in TaskType]
+    # if task_subsets:
+    task_scores = {}
+    for task_subset in task_types:
+        subset_summary = summarize_task_subset(results, task_subset)
+        task_scores[task_subset] = subset_summary
+        # Calculate the mean for each model within this task subset
+        for model_name in subset_summary.columns:
+            task_scores[task_subset].loc["mean", model_name] = subset_summary[model_name].mean()
+
+    return task_scores
+
+    # return summaries
+
+
+def summarize_task_subset(results: dict[str, ResultSet], task_subset: str) -> pd.DataFrame:
+    """Summarize the results for a specific task subset, assuming filtering is already done."""
+    return pd.DataFrame(
+        {model_name: result_set.summarize(task_subset=task_subset) for model_name, result_set in results.items()}
+    )
+
+
+def parse_mteb_results(mteb_results: list[MTEBResults], model_name: str) -> dict[str, ResultSet]:
+    """Parse MTEBResults into a dictionary with the model name as the key."""
     dataset_results = {}
-    for result in results:
-        task_name: str = result["dataset"]["name"]
-        if not task_name.startswith("MTEB "):
-            continue
-        # NOTE: we split on space to remove MTEB and any suffixes.
-        _, task_name, *_ = task_name.split()
 
-        if not task_name in MTEB_MAIN_EN.tasks:
-            continue
+    for result in mteb_results:
+        task_name = result.task_name
 
-        try:
-            main_score = get_task(task_name).metadata.main_score
-            if main_score.startswith("cosine_"):
-                main_score = main_score.replace("cosine_", "cos_sim_")
-            elif main_score == "ap":
-                main_score = "max_ap"
-        except KeyError:
+        test_scores = result.scores.get("test", [])
+
+        if not test_scores:
             continue
 
-        metrics = {x["type"]: x["value"] for x in result["metrics"]}
-        try:
-            score = metrics[main_score] / 100
-        except KeyError:
-            logger.info(f"No main score {model_name}, {task_name}, {main_score}, {metrics}")
-            continue
+        main_score = test_scores[0].get("main_score")
 
-        dataset_results[task_name] = DatasetResult(scores=[score], time=0.0)
+        metrics = {key: score for key, score in test_scores[0].items() if key != "hf_subset" and key != "languages"}
 
-    return ResultSet(datasets=dataset_results)
+        # Populate the DatasetResult
+        dataset_results[task_name] = DatasetResult(scores=[main_score], time=result.evaluation_time, metrics=metrics)
+
+    return {model_name: ResultSet(datasets=dataset_results)}
+
+
+def print_leaderboard(task_scores: dict[str, pd.DataFrame]) -> None:
+    """Print the leaderboard with the mean scores for each task using tabulate for better formatting."""
+    # Extract the mean scores for each task subset and each model
+    leaderboard = pd.DataFrame()
+
+    for task_subset, scores in task_scores.items():
+        leaderboard[task_subset] = scores.loc["mean"]
+
+    # Calculate the overall mean
+    leaderboard["Overall Mean"] = leaderboard.mean(axis=1)
+
+    # Replace NaN values with "N/A"
+    leaderboard = leaderboard.fillna("N/A")
+
+    # Sort the leaderboard by the overall mean (ignoring N/A values)
+    leaderboard = leaderboard.sort_values(by="Overall Mean", ascending=False)
+
+    print(leaderboard.reset_index().to_markdown(index=False))  # noqa: T201

@@ -16,6 +16,7 @@ dependencies = [
 "scikit-learn",
 "scipy",
 "sentence_transformers",
+"tabulate",
 "torch",
 ]
 
