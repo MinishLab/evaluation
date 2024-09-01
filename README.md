@@ -31,9 +31,9 @@ print_leaderboard(task_scores)
 This will print a markdown table similar to the [MTEB leaderboard](https://huggingface.co/spaces/mteb/leaderboard), e.g.:
 
 ```
-| Model                            | Classification    | Clustering          | PairClassification   | Reranking          | Retrieval          | STS               | Summarization       |    PEARL |   WordSim |   Average |
-|:---------------------------------|:------------------|:--------------------|:---------------------|:-------------------|:-------------------|:------------------|:--------------------|---------:|----------:|----------:|
-| average_word_embeddings_komninos | 0.445544882227634 | 0.28861128853230095 | 0.7299602707966883   | 0.4475077101936122 | 0.1779857894736842 | 0.538753210104961 | 0.30502509627865415 | 0.353955 |  0.353955 |  0.404589 |
+| Model                            | Classification    | Clustering          | PairClassification   | Reranking          | Retrieval          | STS               | Summarization       |    PEARL |   WordSim |   Average (All) | Average (MTEB)     |
+|:---------------------------------|:------------------|:--------------------|:---------------------|:-------------------|:-------------------|:------------------|:--------------------|---------:|----------:|----------------:|:-------------------|
+| average_word_embeddings_komninos | 0.445544882227634 | 0.28861128853230095 | 0.7299602707966883   | 0.4475077101936122 | 0.1779857894736842 | 0.538753210104961 | 0.30502509627865415 | 0.353955 |  0.353955 |        0.404589 | 0.4190554639439335 |
 ```
 
 Alternatively, the evaluation can be run on a subset of tasks by specifying the task types:
