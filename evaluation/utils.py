@@ -186,7 +186,7 @@ def _summarize_task_subset(results: dict[str, ResultSet], task_subset: str) -> p
 
 
 def print_leaderboard(task_scores: dict[str, pd.DataFrame]) -> None:
-    """Print the leaderboard with the mean scores for each task using tabulate for better formatting."""
+    """Print the leaderboard with the mean scores for each task as a markdown table."""
     # Extract the mean scores for each task subset and each model
     leaderboard = pd.DataFrame()
 
