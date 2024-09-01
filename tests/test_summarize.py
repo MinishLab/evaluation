@@ -22,7 +22,7 @@ def test_summarize(mock_encoder: Encoder, tmp_path: Path) -> None:
     evaluation = CustomMTEB(tasks)
     results = evaluation.run(mock_encoder, eval_splits=["test"], output_folder=tmp_path)
 
-    # Test pption 1: Parse the results into a custom ResultSet format
+    # Test option 1: Parse the results into a custom ResultSet format
     parsed_results = parse_mteb_results(mteb_results=results, model_name=mock_encoder.mteb_model_meta.name)
     task_scores = summarize_results(parsed_results)
     # Assert that all the task_types exist as keys in the task_scores
