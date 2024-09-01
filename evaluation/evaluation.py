@@ -50,7 +50,7 @@ class CustomMTEB(MTEB):
         return {task.metadata.type for task in self.tasks}
 
 
-def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
+def get_tasks(task_types: list[TaskType | str] | None = None) -> list[AbsTask]:
     """
     Get the MTEB tasks that match the provided task types.
 
@@ -61,7 +61,7 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
     all_task_types = list(TaskType)
     # If no task types are provided, default to all task types
     if task_types is None:
-        task_types = all_task_types
+        valid_task_types = all_task_types
     else:
         # Validate that all items in task_types are in TaskType
         invalid_types = [task for task in task_types if task not in all_task_types]
@@ -73,22 +73,22 @@ def get_tasks(task_types: list[TaskType] | None = None) -> list[AbsTask]:
                 f"Supported task types are: {supported_types}"
             )
         # Convert to a list of TaskType instances
-        task_types = [TaskType(task_type) for task_type in task_types]
+        valid_task_types = [TaskType(task_type) for task_type in task_types]
 
     # Get the MTEB tasks that match the provided task types
     tasks = [
         task
         for task in (mteb.get_task(task_name) for task_name in mteb.MTEB_MAIN_EN.tasks)
-        if task.metadata.type in task_types
+        if task.metadata.type in valid_task_types
     ]
 
     # If WordSim is in the task types, add the WordSim subtasks
-    if TaskType.WORDSIM in task_types:
+    if TaskType.WORDSIM in valid_task_types:
         wordsim_subtasks = WordSim.get_subtasks()
         tasks.extend(wordsim_subtasks)
 
     # If PEARL is in the task types, add the PEARL subtasks
-    if TaskType.PEARL in task_types:
+    if TaskType.PEARL in valid_task_types:
         pearl_subtasks = PEARL.get_subtasks()
         tasks.extend(pearl_subtasks)
 
