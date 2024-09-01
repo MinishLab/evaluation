@@ -194,13 +194,13 @@ def print_leaderboard(task_scores: dict[str, pd.DataFrame]) -> None:
         leaderboard[task_subset] = scores.loc["mean"]
 
     # Calculate the overall mean
-    leaderboard["Overall Mean"] = leaderboard.mean(axis=1)
+    leaderboard["Average"] = leaderboard.mean(axis=1)
 
     # Replace NaN values with "N/A"
     leaderboard = leaderboard.fillna("N/A")
 
-    # Sort the leaderboard by the overall mean (ignoring N/A values)
-    leaderboard = leaderboard.sort_values(by="Overall Mean", ascending=False)
+    # Sort the leaderboard by the Average (ignoring N/A values)
+    leaderboard = leaderboard.sort_values(by="Average", ascending=False)
 
     # Reset the index to make the model names a column
     leaderboard = leaderboard.reset_index()
