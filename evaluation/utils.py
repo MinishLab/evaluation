@@ -13,7 +13,7 @@ from rich.logging import RichHandler
 
 from evaluation import TaskType, get_tasks
 
-_FORBIDDEN_JSONS = ("model_meta.json", "word_sim_benchmarks.json", "pearl_benchmark.json")
+_FORBIDDEN_JSONS = "model_meta.json"
 CUSTOM_TASKS = get_tasks([TaskType.WORDSIM, TaskType.PEARL])
 CUSTOM_TASK_TO_NAME_MAPPING = {task.metadata.name: task for task in CUSTOM_TASKS}
 
