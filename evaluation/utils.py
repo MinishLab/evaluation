@@ -55,6 +55,7 @@ class ResultSet:
 
         result_dict = {}
         for name, result in self.datasets.items():
+            # Check if the task is a custom task or an MTEB task
             if name not in CUSTOM_TASK_TO_NAME_MAPPING:
                 task = mteb.get_task(name)
                 if task.metadata.type == task_subset:
@@ -71,20 +72,6 @@ class ResultSet:
         return {name: result.time for name, result in self.datasets.items()}
 
 
-def _process_result_data(data: dict[str, Any]) -> DatasetResult:
-    """
-    Process a single result JSON.
-
-    :param data: The data to process.
-    :return: The processed data.
-    """
-    scores = []
-    for score in data["scores"]["test"]:
-        scores.append(score["main_score"])
-
-    return DatasetResult(scores=scores, time=data["evaluation_time"])
-
-
 def setup_logging() -> None:
     """Simple logging setup."""
     logging.basicConfig(
@@ -93,26 +80,6 @@ def setup_logging() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
         handlers=[RichHandler(rich_tracebacks=True, tracebacks_suppress=[click])],
     )
-
-
-def get_results_model_folder(model_name_path: Path) -> ResultSet:
-    """
-    Get the results for a single model folder.
-
-    :param model_name_path: The path to the model folder.
-    :return: The results for the model folder.
-    """
-    json_paths = model_name_path.glob("**/*.json")
-
-    result = ResultSet()
-    for json_path in json_paths:
-        if json_path.name in _FORBIDDEN_JSONS:
-            continue
-        data = json.load(open(json_path))
-
-        result.datasets[json_path.stem] = _process_result_data(data)
-
-    return result
 
 
 def load_results(
@@ -142,61 +109,80 @@ def load_results(
     return results
 
 
-def summarize_results(
-    results: dict[str, ResultSet],
-) -> dict[str, pd.DataFrame]:
-    """Summarize the results by task subset, optionally comparing against a baseline."""
-    # summaries = {}
+def get_results_model_folder(model_name_path: Path) -> ResultSet:
+    """
+    Get the results for a single model folder.
 
-    # summaries = {model_name: result_set.summarize() for model_name, result_set in results.items()}
-    # if task_subsets:
-    # task_scores = {}
-    # for task_subset in task_subsets:
-    #     task_scores[task_subset] = summarize_task_subset(results, task_subset)
+    :param model_name_path: The path to the model folder.
+    :return: The results for the model folder.
+    """
+    json_paths = model_name_path.glob("**/*.json")
 
-    # return task_scores
-    task_types = [task.value for task in TaskType]
-    # if task_subsets:
-    task_scores = {}
-    for task_subset in task_types:
-        subset_summary = summarize_task_subset(results, task_subset)
-        task_scores[task_subset] = subset_summary
-        # Calculate the mean for each model within this task subset
-        for model_name in subset_summary.columns:
-            task_scores[task_subset].loc["mean", model_name] = subset_summary[model_name].mean()
+    result = ResultSet()
+    for json_path in json_paths:
+        if json_path.name in _FORBIDDEN_JSONS:
+            continue
+        data = json.load(open(json_path))
 
-    return task_scores
+        result.datasets[json_path.stem] = _process_result_data(data)
 
-    # return summaries
+    return result
 
 
-def summarize_task_subset(results: dict[str, ResultSet], task_subset: str) -> pd.DataFrame:
-    """Summarize the results for a specific task subset, assuming filtering is already done."""
-    return pd.DataFrame(
-        {model_name: result_set.summarize(task_subset=task_subset) for model_name, result_set in results.items()}
-    )
+def _process_result_data(data: dict[str, Any]) -> DatasetResult:
+    """
+    Process a single result JSON.
+
+    :param data: The data to process.
+    :return: The processed data.
+    """
+    scores = []
+    for score in data["scores"]["test"]:
+        scores.append(score["main_score"])
+
+    return DatasetResult(scores=scores, time=data["evaluation_time"])
 
 
 def parse_mteb_results(mteb_results: list[MTEBResults], model_name: str) -> dict[str, ResultSet]:
-    """Parse MTEBResults into a dictionary with the model name as the key."""
+    """Parse MTEBResults into a dictionary of ResultSet objects."""
     dataset_results = {}
 
     for result in mteb_results:
         task_name = result.task_name
-
         test_scores = result.scores.get("test", [])
-
         if not test_scores:
             continue
 
         main_score = test_scores[0].get("main_score")
-
         metrics = {key: score for key, score in test_scores[0].items() if key != "hf_subset" and key != "languages"}
 
         # Populate the DatasetResult
         dataset_results[task_name] = DatasetResult(scores=[main_score], time=result.evaluation_time, metrics=metrics)
 
     return {model_name: ResultSet(datasets=dataset_results)}
+
+
+def summarize_results(
+    results: dict[str, ResultSet],
+) -> dict[str, pd.DataFrame]:
+    """Summarize the results by task subset."""
+    task_types = [task.value for task in TaskType]
+    task_scores = {}
+    for task_subset in task_types:
+        subset_summary = _summarize_task_subset(results, task_subset)
+        task_scores[task_subset] = subset_summary
+        # Calculate the mean for each model within the task subset
+        for model_name in subset_summary.columns:
+            task_scores[task_subset].loc["mean", model_name] = subset_summary[model_name].mean()
+
+    return task_scores
+
+
+def _summarize_task_subset(results: dict[str, ResultSet], task_subset: str) -> pd.DataFrame:
+    """Summarize the results for a specific task subset."""
+    return pd.DataFrame(
+        {model_name: result_set.summarize(task_subset=task_subset) for model_name, result_set in results.items()}
+    )
 
 
 def print_leaderboard(task_scores: dict[str, pd.DataFrame]) -> None:

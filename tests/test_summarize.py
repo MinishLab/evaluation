@@ -7,50 +7,41 @@ from evaluation.utils import load_results, parse_mteb_results, print_leaderboard
 
 
 def test_summarize(mock_encoder: Encoder, tmp_path: Path) -> None:
-    """Test the evaluation with the CustomMTEB class."""
+    """Test the summarization of the evaluation results."""
+    task_types = [task.value for task in TaskType]
+
+    # Get the specified tasks and results
     tasks = get_tasks([TaskType.WORDSIM])
     evaluation = CustomMTEB(tasks)
     results = evaluation.run(mock_encoder, eval_splits=["test"], output_folder=tmp_path)
 
-    # Option 1: Parse the results into a custom ResultSet format
+    # Test pption 1: Parse the results into a custom ResultSet format
     parsed_results = parse_mteb_results(mteb_results=results, model_name=mock_encoder.mteb_model_meta.name)
     task_scores = summarize_results(parsed_results)
+    # Assert that all the task_types exist as keys in the task_scores
+    assert all(task in task_scores.keys() for task in task_types)
+    # Assert that every task_type has the mock_encoder name as a key
+    assert all(mock_encoder.mteb_model_meta.name in task_scores[task] for task in task_types)
+    # Ensure that print_leaderboard works
+    print_leaderboard(task_scores)
 
-    # Option 2: Load all results from the output folder
+    # Test option 2: Load all results from the output folder
     results = load_results(tmp_path)
     task_scores = summarize_results(results)
+    # Assert that all the task_types exist as keys in the task_scores
+    assert all(task in task_scores.keys() for task in task_types)
+    # Assert that every task_type has the mock_encoder name as a key
+    assert all(mock_encoder.mteb_model_meta.name in task_scores[task] for task in task_types)
+    # Ensure that print_leaderboard works
+    print_leaderboard(task_scores)
 
-    # Option 3: load a specific folder
+    # Test option 3: load a specific folder
     result_folder = tmp_path / mock_encoder.mteb_model_meta.name / mock_encoder.mteb_model_meta.revision
     results = load_results(result_folder)
     task_scores = summarize_results(results)
-
-    # results = load_results("results/average_word_embeddings_komninos/sentence-transformers__average_word_embeddings_komninos")
-    results = load_results("results/")
-    # print(results)
-    task_scores = summarize_results(results)
+    # Assert that all the task_types exist as keys in the task_scores
+    assert all(task in task_scores.keys() for task in task_types)
+    # Assert that every task_type has the mock_encoder name as a key
+    assert all(mock_encoder.mteb_model_meta.name in task_scores[task] for task in task_types)
+    # Ensure that print_leaderboard works
     print_leaderboard(task_scores)
-
-    # print(task_scores["STS"])
-    # print(task_scores.keys())
-    # print(task_scores["WordSim"]["average_word_embeddings_komninos"])
-    # print(task_scores["STS"]["average_word_embeddings_komninos"])
-
-    # print(excluded_tasks)
-    # print(excluded_task_names)
-    # Check if they are the same
-    # print(results)
-
-    # print(parsed_results)
-    # print(results[0])
-    # print(type(results[0]))
-    # # Assert that the results folder contains the results for all tasks
-    # task_names = [task.metadata.name for task in tasks]
-    # result_folder = tmp_path / mock_encoder.mteb_model_meta.name / mock_encoder.mteb_model_meta.revision
-    # results = load_results(result_folder)
-    # print(results)
-    # task_scores = summarize_results(results)
-    # print(task_scores)
-
-    # results= load_results("results")
-    # #print(results)
