@@ -26,31 +26,31 @@ def setup_task_mappings() -> tuple[dict[str, list[str]], list[str]]:
     :return: A dictionary mapping task types to task names and a list of custom task names.
     """
     # Get all tasks
-    _all_tasks = get_tasks()
+    all_tasks = get_tasks()
     # Create a dictionary mapping task types to task names
-    _task_type_to_tasks_mapping = defaultdict(list)
+    task_type_to_tasks_mapping = defaultdict(list)
 
     # Get all WordSim tasks
-    _wordsim_tasks = get_tasks([TaskType.WORDSIM])
-    _wordsim_task_names = [task.metadata.name for task in _wordsim_tasks]
+    wordsim_tasks = get_tasks([TaskType.WORDSIM])
+    wordsim_task_names = [task.metadata.name for task in wordsim_tasks]
 
     # Get all PEARL tasks
-    _pearl_tasks = get_tasks([TaskType.PEARL])
-    _pearl_task_names = [task.metadata.name for task in _pearl_tasks]
+    pearl_tasks = get_tasks([TaskType.PEARL])
+    pearl_task_names = [task.metadata.name for task in pearl_tasks]
 
     # Get all custom task names
-    _custom_task_names = _wordsim_task_names + _pearl_task_names
+    custom_task_names = wordsim_task_names + pearl_task_names
 
     # Populate the dictionary
-    for task in _all_tasks:
-        if task.metadata.name in _wordsim_task_names:
-            _task_type_to_tasks_mapping["WordSim"].append(task.metadata.name)
-        elif task.metadata.name in _pearl_task_names:
-            _task_type_to_tasks_mapping["PEARL"].append(task.metadata.name)
+    for task in all_tasks:
+        if task.metadata.name in wordsim_task_names:
+            task_type_to_tasks_mapping["WordSim"].append(task.metadata.name)
+        elif task.metadata.name in pearl_task_names:
+            task_type_to_tasks_mapping["PEARL"].append(task.metadata.name)
         else:
-            _task_type_to_tasks_mapping[task.metadata.type].append(task.metadata.name)
+            task_type_to_tasks_mapping[task.metadata.type].append(task.metadata.name)
 
-    return _task_type_to_tasks_mapping, _custom_task_names
+    return task_type_to_tasks_mapping, custom_task_names
 
 
 _task_type_to_tasks_mapping, _custom_task_names = setup_task_mappings()
