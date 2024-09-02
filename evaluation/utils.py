@@ -143,7 +143,7 @@ def load_results(results_dir: str | Path) -> dict[str, ResultSet]:
         else:
             full_model_name = f"{model_name}_{model_revision}"
 
-        if json_path.name not in _FORBIDDEN_JSON:
+        if json_path.name != _FORBIDDEN_JSON:
             with open(json_path) as f:
                 data = json.load(f)
 
