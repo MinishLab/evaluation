@@ -136,6 +136,7 @@ def load_results(results_dir: str | Path) -> dict[str, ResultSet]:
         model_revision = json_path.parent.name
         model_name = json_path.parent.parent.name
         if model_name == "no_model_name_available":
+            logger.warning(f"Model name not available for {json_path}. Skipping.")
             continue
         elif model_revision == "no_revision_available":
             full_model_name = model_name
