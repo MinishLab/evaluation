@@ -9,7 +9,7 @@ To run the evaluation on all available tasks and summarize the results, the foll
 ```python
 from sentence_transformers import SentenceTransformer
 
-from evaluation import CustomMTEB, get_tasks, parse_mteb_results, print_leaderboard, summarize_results
+from evaluation import CustomMTEB, get_tasks, parse_mteb_results, make_leaderboard, summarize_results
 
 # Define the model name
 model_name = "average_word_embeddings_komninos"
@@ -24,15 +24,16 @@ results = evaluation.run(model, eval_splits=["test"], output_folder=f"results/{m
 parsed_results = parse_mteb_results(mteb_results=results, model_name=model_name)
 task_scores = summarize_results(parsed_results)
 # Print the results in a leaderboard format
-print_leaderboard(task_scores)
+print(make_leaderboard(task_scores))
 ```
 
 This will print a markdown table similar to the [MTEB leaderboard](https://huggingface.co/spaces/mteb/leaderboard), e.g.:
 
 ```
-| Model                            | Classification    | Clustering          | PairClassification   | Reranking          | Retrieval          | STS               | Summarization       |    PEARL |   WordSim |   Average (All) | Average (MTEB)     |
-|:---------------------------------|:------------------|:--------------------|:---------------------|:-------------------|:-------------------|:------------------|:--------------------|---------:|----------:|----------------:|:-------------------|
-| average_word_embeddings_komninos | 0.445544882227634 | 0.28861128853230095 | 0.7299602707966883   | 0.4475077101936122 | 0.1779857894736842 | 0.538753210104961 | 0.30502509627865415 | 0.353955 |  0.353955 |        0.404589 | 0.4190554639439335 |
+| Model                            | Classification | Clustering | PairClassification | Reranking | Retrieval | STS       | Summarization |    PEARL |  WordSim |  Average (All) | Average (MTEB)|
+|:---------------------------------|:---------------|:-----------|:-------------------|:----------|:----------|:----------|:--------------|---------:|---------:|---------------:|:--------------|
+| average_word_embeddings_komninos | 0.445545       | 0.288611   | 0.72996            | 0.447508  | 0.200531  | 0.538753  | 0.305025      | 0.466255 | 0.20957  | 0.403529       | 0.422276      |
+
 ```
 
 Alternatively, the evaluation can be run on a subset of tasks by specifying the task types:
@@ -73,17 +74,17 @@ Custom embedders can be used by implementing the [Encoder protocol](https://gith
 The `summarize_results` function can be used to summarize results from an existing results folder, e.g.:
 
 ```python
-from evaluation import load_results, print_leaderboard, summarize_results
+from evaluation import load_results, make_leaderboard, summarize_results
 
 # To summarize all models in a results folder:
 results = load_results("results/")
 task_scores = summarize_results(results)
-print_leaderboard(task_scores)
+print(make_leaderboard(task_scores))
 
 # To summarize a single model:
 results = load_results("results/average_word_embeddings_komninos/")
 task_scores = summarize_results(results)
-print_leaderboard(task_scores)
+print(make_leaderboard(task_scores))
 ```
 
 

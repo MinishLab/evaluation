@@ -1,7 +1,7 @@
 from importlib.metadata import version
 
 from evaluation.evaluation import CustomMTEB, TaskType, get_tasks
-from evaluation.utils import load_results, parse_mteb_results, print_leaderboard, summarize_results
+from evaluation.utils import load_results, make_leaderboard, parse_mteb_results, summarize_results
 
 __all__ = [
     "CustomMTEB",
@@ -9,7 +9,7 @@ __all__ = [
     "get_tasks",
     "load_results",
     "parse_mteb_results",
-    "print_leaderboard",
+    "make_leaderboard",
     "summarize_results",
 ]
 __version__ = version("evaluation")  # fetch version from install metadata
