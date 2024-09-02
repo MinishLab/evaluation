@@ -92,11 +92,8 @@ class ResultSet:
 
     datasets: dict[str, DatasetResult] = field(default_factory=dict)
 
-    def summarize(self, task_type: str | None = None) -> pd.Series:
+    def summarize(self, task_type: str) -> pd.Series:
         """Summarize the results by taking the mean of all datasets."""
-        if task_type is None:
-            return pd.Series({name: result.mean() for name, result in self.datasets.items()})
-
         result_dict = {}
         for name, result in self.datasets.items():
             # Check if the task is a custom task or an MTEB task
