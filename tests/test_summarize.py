@@ -22,18 +22,18 @@ def test_summarize(mock_encoder: Encoder, tmp_path: Path) -> None:
     evaluation = CustomMTEB(tasks)
     results = evaluation.run(mock_encoder, eval_splits=["test"], output_folder=tmp_path)
 
-    # Test option 1: Parse the results into a custom ResultSet format
-    parsed_results = parse_mteb_results(mteb_results=results, model_name=mock_encoder.mteb_model_meta.name)
-    model_scores = summarize_results(parsed_results)
-    # Assert that all the task_types exist as keys in the model_scores
-    assert all(task in model_scores[mock_encoder.mteb_model_meta.name].keys() for task in task_types)
-    # Assert that every task_type has the mock_encoder name as a key
-    assert mock_encoder.mteb_model_meta.name in model_scores
-    # Ensure that print_leaderboard works
-    make_leaderboard(model_scores)
-
     # Set the model name
     model_name = f"{mock_encoder.mteb_model_meta.name}_{mock_encoder.mteb_model_meta.revision}"
+
+    # Test option 1: Parse the results into a custom ResultSet format
+    parsed_results = parse_mteb_results(mteb_results=results, model_name=model_name)
+    model_scores = summarize_results(parsed_results)
+    # Assert that all the task_types exist as keys in the model_scores
+    assert all(task in model_scores[model_name].keys() for task in task_types)
+    # Assert that every task_type has the mock_encoder name as a key
+    assert model_name in model_scores
+    # Ensure that print_leaderboard works
+    make_leaderboard(model_scores)
 
     # Test option 2: Load all results from the output folder
     results = load_results(tmp_path)
