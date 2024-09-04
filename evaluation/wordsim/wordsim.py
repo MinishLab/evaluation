@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib import resources
 from typing import Any
 
 import datasets
@@ -57,12 +58,11 @@ class WordSim(AbsTaskSTS):
             sentence2 = []
             scores = []
 
-            file_path = task.file
             index1 = task.index1
             index2 = task.index2
             target = task.target
 
-            with open(file_path, "r") as f:
+            with resources.open_text("evaluation.wordsim.data", task.file) as f:
                 for line in f:
                     parts = line.strip().split("\t")
                     word1 = parts[index1]
