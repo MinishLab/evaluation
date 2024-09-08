@@ -29,7 +29,7 @@ def test_summarize(mock_encoder: Encoder, tmp_path: Path) -> None:
     parsed_results = parse_mteb_results(mteb_results=results, model_name=model_name)
     model_scores = summarize_results(parsed_results)
     # Assert that all the task_types exist as keys in the model_scores
-    assert all(task in model_scores[model_name].keys() for task in task_types)
+    assert all(task in model_scores[model_name]["task_means"].keys() for task in task_types)
     # Assert that every task_type has the mock_encoder name as a key
     assert model_name in model_scores
     # Ensure that print_leaderboard works
@@ -39,7 +39,7 @@ def test_summarize(mock_encoder: Encoder, tmp_path: Path) -> None:
     results = load_results(tmp_path)
     model_scores = summarize_results(results)
     # Assert that all the task_types exist as keys in the model_scores
-    assert all(task in model_scores[model_name].keys() for task in task_types)
+    assert all(task in model_scores[model_name]["task_means"].keys() for task in task_types)
     # Assert that every task_type has the mock_encoder name as a key
     assert model_name in model_scores
     # Ensure that print_leaderboard works
@@ -50,7 +50,7 @@ def test_summarize(mock_encoder: Encoder, tmp_path: Path) -> None:
     results = load_results(result_folder)
     model_scores = summarize_results(results)
     # Assert that all the task_types exist as keys in the model_scores
-    assert all(task in model_scores[model_name].keys() for task in task_types)
+    assert all(task in model_scores[model_name]["task_means"].keys() for task in task_types)
     # Assert that every task_type has the mock_encoder name as a key
     assert model_name in model_scores
     # Ensure that print_leaderboard works
