@@ -12,6 +12,7 @@ import pandas as pd
 from mteb.evaluation.LangMapping import LANG_MAPPING
 from mteb.load_results import MTEBResults
 from rich.logging import RichHandler
+from scipy.stats._stats_py import SignificanceResult
 
 from evaluation import TaskType, get_tasks
 
@@ -173,6 +174,10 @@ def parse_mteb_results(mteb_results: list[MTEBResults], model_name: str) -> dict
             continue
 
         main_score = [score["main_score"] for score in test_scores if score["hf_subset"] in _SUPPORTED_LANGS][0]
+
+        # Check if the main score is a SignificanceResult. If so, extract the statistic
+        if isinstance(main_score, SignificanceResult):
+            main_score = main_score.statistic
 
         # Populate the DatasetResult
         dataset_results[task_name] = DatasetResult(scores=[main_score], time=result.evaluation_time)
