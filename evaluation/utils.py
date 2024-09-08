@@ -160,6 +160,8 @@ def _process_result_data(data: dict[str, Any]) -> DatasetResult:
     :return: The processed data.
     """
     scores = [score["main_score"] for score in data["scores"]["test"]]
+    scores = [score.statistic if isinstance(score, SignificanceResult) else score for score in scores]
+
     return DatasetResult(scores=scores, time=data["evaluation_time"])
 
 
