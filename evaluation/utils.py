@@ -146,7 +146,6 @@ def load_results(results_dir: str | Path) -> dict[str, ResultSet]:
         if json_path.name != _FORBIDDEN_JSON:
             with open(json_path) as f:
                 data = json.load(f)
-
             results[full_model_name].datasets[json_path.stem] = _process_result_data(data)
 
     return dict(results)
@@ -159,7 +158,7 @@ def _process_result_data(data: dict[str, Any]) -> DatasetResult:
     :param data: The data to process.
     :return: The processed data.
     """
-    scores = [score["main_score"] for score in data["scores"]["test"]]
+    scores = [score["main_score"] for score in data["scores"]["test"] if score["hf_subset"] in _SUPPORTED_LANGS]
     scores = [score[0] if isinstance(score, list) else score for score in scores]
 
     return DatasetResult(scores=scores, time=data["evaluation_time"])
