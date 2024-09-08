@@ -191,7 +191,6 @@ def summarize_results(
     """
     model_scores = {}
     task_types = [task.value for task in TaskType]
-
     for model_name, result_set in results.items():
         model_summary = {}
         for task_type in task_types:
