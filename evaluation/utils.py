@@ -9,12 +9,14 @@ import click
 import mteb
 import numpy as np
 import pandas as pd
+from mteb.evaluation.LangMapping import LANG_MAPPING
 from mteb.load_results import MTEBResults
 from rich.logging import RichHandler
 
 from evaluation import TaskType, get_tasks
 
 _FORBIDDEN_JSON = "model_meta.json"
+_SUPPORTED_LANGS = {"default", "en-en", "en"}.union(LANG_MAPPING["en"])
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +172,7 @@ def parse_mteb_results(mteb_results: list[MTEBResults], model_name: str) -> dict
         if not test_scores:
             continue
 
-        main_score = test_scores[0]["main_score"]
+        main_score = [score["main_score"] for score in test_scores if score["hf_subset"] in _SUPPORTED_LANGS][0]
 
         # Populate the DatasetResult
         dataset_results[task_name] = DatasetResult(scores=[main_score], time=result.evaluation_time)

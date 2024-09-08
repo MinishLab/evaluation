@@ -16,8 +16,8 @@ model_name = "average_word_embeddings_komninos"
 
 # Get all available tasks
 tasks = get_tasks()
-# Define the CustomMTEB object with the specified tasks and languages
-evaluation = CustomMTEB(tasks=tasks, task_langs=["en"])
+# Define the CustomMTEB object with the specified tasks
+evaluation = CustomMTEB(tasks=tasks)
 model = SentenceTransformer(model_name)
 results = evaluation.run(model, eval_splits=["test"], output_folder=f"results/{model_name}")
 
@@ -50,8 +50,8 @@ model_name = "average_word_embeddings_komninos"
 task_types = [TaskType.CLASSIFICATION, TaskType.WORDSIM]
 tasks = get_tasks(task_types=task_types)
 
-# Define the CustomMTEB object with the specified tasks and languages
-evaluation = CustomMTEB(tasks=tasks, task_langs=["en"])
+# Define the CustomMTEB object with the specified tasks
+evaluation = CustomMTEB(tasks=tasks)
 # Run the rest of the evaluation and summarization as before
 ```
 

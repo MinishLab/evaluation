@@ -78,7 +78,7 @@ def get_tasks(task_types: list[TaskType | str] | None = None) -> list[AbsTask]:
     # Get the MTEB tasks that match the provided task types
     tasks = [
         task
-        for task in (mteb.get_task(task_name) for task_name in mteb.MTEB_MAIN_EN.tasks)
+        for task in (mteb.get_task(task_name, languages=["eng"]) for task_name in mteb.MTEB_MAIN_EN.tasks)
         if task.metadata.type in valid_task_types
     ]
 
