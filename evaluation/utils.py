@@ -160,7 +160,7 @@ def _process_result_data(data: dict[str, Any]) -> DatasetResult:
     :return: The processed data.
     """
     scores = [score["main_score"] for score in data["scores"]["test"]]
-    scores = [score.statistic if isinstance(score, SignificanceResult) else score for score in scores]
+    scores = [score[0] if isinstance(score, list) else score for score in scores]
 
     return DatasetResult(scores=scores, time=data["evaluation_time"])
 
@@ -198,8 +198,11 @@ def summarize_results(
     """
     model_scores = {}
     task_types = [task.value for task in TaskType]
+
     for model_name, result_set in results.items():
-        model_summary = {}
+        dataset_scores = []
+        task_summaries = {}
+
         for task_type in task_types:
             # Summarize the results for the specific task type
             task_summary = result_set.summarize(task_type=task_type)
@@ -209,33 +212,35 @@ def summarize_results(
 
             # Check if the model has results for all required datasets
             if set(task_summary.index) == set(expected_datasets):
-                # All datasets are present, calculate the mean
-                model_summary[task_type] = task_summary.mean()
+                task_summaries[task_type] = task_summary.mean()
+                dataset_scores.extend(task_summary.values)  # Collect individual dataset scores
             else:
-                # Missing datasets, set mean to NaN
-                model_summary[task_type] = np.nan
+                task_summaries[task_type] = np.nan
                 logger.warning(f"Model {model_name} is missing results for some datasets in task type {task_type}.")
 
-        # Convert model_summary to a pandas Series for easier handling later
-        model_scores[model_name] = pd.Series(model_summary)
+        # Store task means but also collect all individual dataset scores for macro averaging
+        model_scores[model_name] = {
+            "task_means": pd.Series(task_summaries),
+            "dataset_scores": dataset_scores,  # Collecting all dataset scores for macro averaging
+        }
 
-    # Convert the model_scores dictionary to a DataFrame
-    return pd.DataFrame(model_scores)
+    return model_scores
 
 
-def make_leaderboard(model_scores: dict[str, pd.Series]) -> pd.DataFrame:
-    """Make the leaderboard with the mean scores for each task."""
-    # Convert the model_scores dictionary to a DataFrame
-    leaderboard = pd.DataFrame(model_scores)
+def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
+    """Make the leaderboard with the mean scores for each task and compute macro scores."""
+    # Extract task means and dataset scores
+    task_means = {model: scores["task_means"] for model, scores in model_scores.items()}
+    dataset_scores = {model: scores["dataset_scores"] for model, scores in model_scores.items()}
 
-    # Calculate the overall mean for all tasks (only if every task has a score)
-    all_task_types = leaderboard.index.tolist()
-    leaderboard.loc["Average (All)"] = leaderboard.apply(
-        lambda row: row.mean() if not row.isna().any() else np.nan, axis=0
-    )
+    # Convert the task_means dictionary to a DataFrame for task-wise averaging
+    leaderboard = pd.DataFrame(task_means)
+
+    # Calculate the overall macro score for each model (mean of all datasets across all tasks)
+    leaderboard.loc["Average (All)"] = {model: np.mean(scores) for model, scores in dataset_scores.items()}
 
     # Calculate the overall mean for MTEB tasks (excluding PEARL and WordSim)
-    mteb_task_types = [task for task in all_task_types if task not in {"PEARL", "WordSim"}]
+    mteb_task_types = [task for task in leaderboard.index if task not in {"PEARL", "WordSim"}]
     leaderboard.loc["Average (MTEB)"] = leaderboard.loc[mteb_task_types].apply(
         lambda row: row.mean() if not row.isna().any() else np.nan, axis=0
     )
