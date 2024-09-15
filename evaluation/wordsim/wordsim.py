@@ -65,8 +65,11 @@ class WordSim(AbsTaskSTS):
             with resources.open_text("evaluation.wordsim.data", task.file) as f:
                 for line in f:
                     parts = line.strip().split("\t")
+                    # Remove underscores from the words
+                    parts = [" ".join(part.split("_")) for part in parts]
                     word1 = parts[index1]
                     word2 = parts[index2]
+
                     similarity = float(parts[target])
 
                     sentence1.append(word1)
