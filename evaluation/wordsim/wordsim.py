@@ -66,7 +66,7 @@ class WordSim(AbsTaskSTS):
                 for line in f:
                     parts = line.strip().split("\t")
                     # Remove underscores from the words
-                    parts = [" ".join(part.split("_")) for part in parts]
+                    parts = [part.replace("_", " ") for part in parts]
                     word1 = parts[index1]
                     word2 = parts[index2]
 
