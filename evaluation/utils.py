@@ -262,7 +262,6 @@ def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
     leaderboard = pd.DataFrame(task_means)
 
     # Calculate the overall macro score for each model (mean of all datasets across all tasks)
-    # leaderboard.loc["Average (All)"] = {model: np.mean(scores) for model, scores in dataset_scores.items()}
     leaderboard.loc["Average (All)"] = {
         model: np.mean(list(scores.values())) for model, scores in dataset_scores.items()
     }
