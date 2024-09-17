@@ -290,8 +290,8 @@ def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
     leaderboard.rename(columns={"index": "Model"}, inplace=True)
 
     # Reorder columns to place "Average (All)" and "Average (MTEB)" right after "Model"
-    columns = ["Model", "Average (MTEB)", "Average (All)"] + [
-        col for col in leaderboard.columns if col not in ["Model", "Average (MTEB)", "Average (All)"]
+    columns = ["Model", "Average (All)", "Average (MTEB)"] + [
+        col for col in leaderboard.columns if col not in ["Model", "Average (All)", "Average (MTEB)"]
     ]
     leaderboard = leaderboard[columns]
 
