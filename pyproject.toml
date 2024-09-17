@@ -9,7 +9,7 @@ dependencies = [
 "autofj",
 "datasets",
 "huggingface-hub",
-"mteb",
+"mteb==1.14.15",
 "numpy<2.0.0",
 "pandas",
 "pytorch_lightning",
