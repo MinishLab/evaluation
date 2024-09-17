@@ -277,6 +277,9 @@ def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
         model: np.mean(list(scores.values())) for model, scores in mteb_dataset_scores.items()
     }
 
+    # Multiply all values by 100 and format to 2 decimal places
+    leaderboard = leaderboard.applymap(lambda x: f"{x * 100:.2f}" if isinstance(x, (int, float)) else x)
+
     # Replace NaN values with "N/A"
     leaderboard = leaderboard.fillna("N/A")
 
@@ -285,5 +288,11 @@ def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
 
     # Rename the index column to "Model"
     leaderboard.rename(columns={"index": "Model"}, inplace=True)
+
+    # Reorder columns to place "Average (All)" and "Average (MTEB)" right after "Model"
+    columns = ["Model", "Average (MTEB)", "Average (All)"] + [
+        col for col in leaderboard.columns if col not in ["Model", "Average (MTEB)", "Average (All)"]
+    ]
+    leaderboard = leaderboard[columns]
 
     return leaderboard
