@@ -263,10 +263,9 @@ def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
 
     # Calculate the overall macro score for each model (mean of all datasets across all tasks)
     leaderboard.loc["Average (All)"] = {
-        model: np.mean(leaderboard[model]) if leaderboard[model].notna().all() else np.nan
-        for model in leaderboard.columns
+        model: np.mean(list(scores.values())) if task_means[model].notna().all() else np.nan
+        for model, scores in dataset_scores.items()
     }
-
     # Filter out the custom task names from dataset_scores
     mteb_dataset_scores = {
         model: {dataset: score for dataset, score in scores.items() if dataset not in _custom_task_names}
@@ -275,14 +274,17 @@ def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
 
     # Calculate the overall mean for MTEB tasks (excluding custom task names)
     leaderboard.loc["Average (MTEB)"] = {
-        model: np.mean(leaderboard.loc[leaderboard.index.difference(_custom_task_names), model])
-        if leaderboard.loc[leaderboard.index.difference(_custom_task_names), model].notna().all()
+        model: np.mean(list(scores.values()))
+        if task_means[model].notna().all() and pd.Series(mteb_dataset_scores[model]).notna().all()
         else np.nan
-        for model in leaderboard.columns
+        for model, scores in mteb_dataset_scores.items()
     }
 
     # Multiply all values by 100 and format to 2 decimal places
     leaderboard = leaderboard.applymap(lambda x: f"{x * 100:.2f}" if isinstance(x, (int, float)) else x)
+
+    # Replace NaN values with "N/A"
+    leaderboard = leaderboard.fillna("N/A")
 
     # Transpose the DataFrame so models are in rows and task types in columns
     leaderboard = leaderboard.transpose().reset_index()
