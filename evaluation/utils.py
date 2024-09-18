@@ -19,6 +19,21 @@ from evaluation import TaskType, get_tasks
 _FORBIDDEN_JSON = "model_meta.json"
 _SUPPORTED_LANGS = {"default", "en-en", "en"}.union(LANG_MAPPING["en"])
 
+_TASK_LIST_CQA = {
+    "CQADupstackAndroidRetrieval",
+    "CQADupstackEnglishRetrieval",
+    "CQADupstackGamingRetrieval",
+    "CQADupstackGisRetrieval",
+    "CQADupstackMathematicaRetrieval",
+    "CQADupstackPhysicsRetrieval",
+    "CQADupstackProgrammersRetrieval",
+    "CQADupstackStatsRetrieval",
+    "CQADupstackTexRetrieval",
+    "CQADupstackUnixRetrieval",
+    "CQADupstackWebmastersRetrieval",
+    "CQADupstackWordpressRetrieval",
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -199,20 +214,31 @@ def summarize_results(
     task_types = [task.value for task in TaskType]
 
     for model_name, result_set in results.items():
-        dataset_scores = []
+        # dataset_scores = []
+        dataset_scores = {}
         task_summaries = {}
 
         for task_type in task_types:
             # Summarize the results for the specific task type
             task_summary = result_set.summarize(task_type=task_type)
-
+            if task_type == "Retrieval":
+                # Retrieval task is a special case, as it has multiple datasets for CQA
+                scores = {}
+                scores_cqa = []
+                for name, score in task_summary.items():
+                    if name not in _TASK_LIST_CQA:
+                        scores[name] = score
+                    else:
+                        scores_cqa.append(score)
+                    scores["CQADupstack"] = np.mean(scores_cqa)
+                task_summary = pd.Series(scores)
             # Get the expected datasets for this task type
             expected_datasets = _task_type_to_tasks_mapping[task_type]
-
-            # Check if the model has results for all required datasets
-            if set(task_summary.index) == set(expected_datasets):
+            # Check if the model has results for all required datasets, or the Retrieval task
+            if set(task_summary.index) == set(expected_datasets) or task_type == "Retrieval":
                 task_summaries[task_type] = task_summary.mean()
-                dataset_scores.extend(task_summary.values)  # Collect individual dataset scores
+                for dataset, score in task_summary.items():
+                    dataset_scores[dataset] = score
             else:
                 task_summaries[task_type] = np.nan
                 logger.warning(f"Model {model_name} is missing results for some datasets in task type {task_type}.")
@@ -236,13 +262,26 @@ def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
     leaderboard = pd.DataFrame(task_means)
 
     # Calculate the overall macro score for each model (mean of all datasets across all tasks)
-    leaderboard.loc["Average (All)"] = {model: np.mean(scores) for model, scores in dataset_scores.items()}
+    leaderboard.loc["Average (All)"] = {
+        model: np.mean(list(scores.values())) if task_means[model].notna().all() else np.nan
+        for model, scores in dataset_scores.items()
+    }
+    # Filter out the custom task names from dataset_scores
+    mteb_dataset_scores = {
+        model: {dataset: score for dataset, score in scores.items() if dataset not in _custom_task_names}
+        for model, scores in dataset_scores.items()
+    }
 
-    # Calculate the overall mean for MTEB tasks (excluding PEARL and WordSim)
-    mteb_task_types = [task for task in leaderboard.index if task not in {"PEARL", "WordSim"}]
-    leaderboard.loc["Average (MTEB)"] = leaderboard.loc[mteb_task_types].apply(
-        lambda row: row.mean() if not row.isna().any() else np.nan, axis=0
-    )
+    # Calculate the overall mean for MTEB tasks (excluding custom task names)
+    leaderboard.loc["Average (MTEB)"] = {
+        model: np.mean(list(scores.values()))
+        if task_means[model].notna().all() and pd.Series(mteb_dataset_scores[model]).notna().all()
+        else np.nan
+        for model, scores in mteb_dataset_scores.items()
+    }
+
+    # Multiply all values by 100 and format to 2 decimal places
+    leaderboard = leaderboard.applymap(lambda x: f"{x * 100:.2f}" if isinstance(x, (int, float)) else x)
 
     # Replace NaN values with "N/A"
     leaderboard = leaderboard.fillna("N/A")
@@ -252,5 +291,11 @@ def make_leaderboard(model_scores: dict[str, dict]) -> pd.DataFrame:
 
     # Rename the index column to "Model"
     leaderboard.rename(columns={"index": "Model"}, inplace=True)
+
+    # Reorder columns to place "Average (All)" and "Average (MTEB)" right after "Model"
+    columns = ["Model", "Average (All)", "Average (MTEB)"] + [
+        col for col in leaderboard.columns if col not in ["Model", "Average (All)", "Average (MTEB)"]
+    ]
+    leaderboard = leaderboard[columns]
 
     return leaderboard
