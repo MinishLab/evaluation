@@ -10,7 +10,7 @@ dependencies = [
 "datasets",
 "huggingface-hub",
 "mteb==1.14.15",
-"numpy<2.0.0",
+"numpy",
 "pandas",
 "pytorch_lightning",
 "reach",

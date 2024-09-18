@@ -576,9 +576,9 @@ requires-dist = [
     { name = "datasets" },
     { name = "huggingface-hub" },
     { name = "ipython", marker = "extra == 'dev'" },
-    { name = "mteb" },
+    { name = "mteb", specifier = "==1.14.15" },
     { name = "mypy", marker = "extra == 'dev'" },
-    { name = "numpy", specifier = "<2.0.0" },
+    { name = "numpy" },
     { name = "pandas" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'dev'" },
@@ -2495,7 +2495,7 @@ name = "triton"
 version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "filelock" },
+    { name = "filelock", marker = "python_full_version < '3.13'" },
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/45/27/14cc3101409b9b4b9241d2ba7deaa93535a217a211c86c4cc7151fb12181/triton-3.0.0-1-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:e1efef76935b2febc365bfadf74bcb65a6f959a9872e5bddf44cc9e0adce1e1a", size = 209376304 },
