@@ -158,14 +158,14 @@ def summarize_classification_results(results_path: str) -> pd.DataFrame:
     # Generate scatterplot for average score vs average time
     avg_df = pd.DataFrame(model_averages)
     plt.figure(figsize=(8, 6))
-    plt.scatter(avg_df["avg_score"], avg_df["avg_time"], color="b", alpha=0.6)
+    plt.scatter(avg_df["avg_score"], avg_df["samples_second"], color="b", alpha=0.6)
 
     for i, model in enumerate(avg_df["model"]):
-        plt.text(avg_df["avg_score"][i], avg_df["avg_time"][i], model)
+        plt.text(avg_df["avg_score"][i], avg_df["samples_second"][i], model)
 
     plt.xlabel("Average Score")
-    plt.ylabel("Average Runtime (s)")
-    plt.title("Model Performance: Average Score vs Average Runtime")
+    plt.ylabel("Sentences per second (CPU)")
+    plt.title("Model Performance: Average Score vs Sentences per second")
     plt.grid(True)
     plt.show()
 
