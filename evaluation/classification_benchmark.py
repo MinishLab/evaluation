@@ -42,6 +42,8 @@ class ClassificationBenchmark:
 
         self.model_name = model_name
         self.save_path = Path(save_path) / f"{model_name}_classification_results.json"
+        # Make sure the save directory exists
+        self.save_path.parent.mkdir(parents=True, exist_ok=True)
         self.results: dict[str, dict] = {self.model_name: {}}
 
     def train_test_classification(
