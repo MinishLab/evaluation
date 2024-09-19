@@ -17,6 +17,7 @@ dependencies = [
 "reach",
 "scikit-learn",
 "scipy",
+"seaborn",
 "sentence_transformers",
 "torch",
 ]
