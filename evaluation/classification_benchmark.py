@@ -48,7 +48,7 @@ class ClassificationBenchmark:
 
     def train_test_classification(
         self, encoder: Encoder, dataset: Dataset, text_name: str, label_name: str
-    ) -> tuple[list[str], list[str]]:
+    ) -> tuple[list[str], list[str], float]:
         """
         Train and test a classification model for a specific encoder.
 
@@ -58,18 +58,23 @@ class ClassificationBenchmark:
         :param label_name: The name of the label column in the dataset.
         :return: The predictions and labels.
         """
+        encode_time = 0.0
         model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000))
         split = dataset["train"].train_test_split(test_size=0.1, seed=42)
+        s = time.time()
         X_train = encoder.encode(split["train"][text_name], show_progress_bar=True)
+        encode_time += time.time() - s
         y_train = split["train"][label_name]
 
+        s = time.time()
         X_dev = encoder.encode(split["test"][text_name], show_progress_bar=True)
+        encode_time += time.time() - s
         y_dev = split["test"][label_name]
 
         model.fit(X_train, y_train)
         pred = model.predict(X_dev)
 
-        return pred, y_dev
+        return pred, y_dev, encode_time
 
     def run(self) -> None:
         """Run the classification benchmark."""
@@ -83,7 +88,7 @@ class ClassificationBenchmark:
 
             start_time = time.time()
 
-            pred, gold = self.train_test_classification(self.encoder, dataset, text_name, label_name)
+            pred, gold, encode_time = self.train_test_classification(self.encoder, dataset, text_name, label_name)
             metrics = precision_recall_fscore_support(gold, pred, average="micro")
             runtime = time.time() - start_time
 
@@ -91,6 +96,9 @@ class ClassificationBenchmark:
                 "dataset": ds_name,
                 "main_score": metrics[2],  # Main score
                 "runtime": runtime,
+                "encode_time": encode_time,
+                "dataset_length": len(dataset["train"]),
+                "samples_second": len(dataset["train"]) / runtime,
             }
 
             # Save the results to a JSON file
