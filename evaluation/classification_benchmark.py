@@ -134,12 +134,14 @@ def summarize_classification_results(results_path: str) -> pd.DataFrame:
         total_score = 0
         total_time = 0
         dataset_count = 0
+        total_samples = 0
 
         # Extract dataset scores and runtimes
         for dataset_name, metrics in model_info.items():
             row[dataset_name] = metrics["main_score"]
             total_score += metrics["main_score"]
-            total_time += metrics["runtime"]
+            total_time += metrics["encode_time"]
+            total_samples += metrics["dataset_length"]
             dataset_count += 1
 
         # Append data for the DataFrame
@@ -147,8 +149,8 @@ def summarize_classification_results(results_path: str) -> pd.DataFrame:
 
         # Calculate averages for scatterplot
         avg_score = total_score / dataset_count
-        avg_time = total_time / dataset_count
-        model_averages.append({"model": model_name, "avg_score": avg_score, "avg_time": avg_time})
+        samples_second = total_samples / total_time
+        model_averages.append({"model": model_name, "avg_score": avg_score, "samples_second": samples_second})
 
     # Create DataFrame for scores
     df = pd.DataFrame(data)
