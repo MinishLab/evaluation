@@ -12,7 +12,7 @@ from sentence_transformers import SentenceTransformer
 from evaluation import CustomMTEB, get_tasks, parse_mteb_results, make_leaderboard, summarize_results
 
 # Define the model name
-model_name = "average_word_embeddings_komninos"
+model_name = "average_word_embeddings_glove.6B.300d"
 
 # Get all available tasks
 tasks = get_tasks()
@@ -31,10 +31,9 @@ print(make_leaderboard(task_scores))
 This will print a markdown table similar to the [MTEB leaderboard](https://huggingface.co/spaces/mteb/leaderboard), e.g.:
 
 ```
-| Model                            | Classification | Clustering | PairClassification | Reranking | Retrieval | STS       | Summarization |    PEARL |  WordSim |  Average (All) | Average (MTEB)|
-|:---------------------------------|:---------------|:-----------|:-------------------|:----------|:----------|:----------|:--------------|---------:|---------:|---------------:|:--------------|
-| average_word_embeddings_komninos | 0.445545       | 0.288611   | 0.72996            | 0.447508  | 0.200531  | 0.538753  | 0.305025      | 0.466255 | 0.20957  | 0.403529       | 0.422276      |
-
+| Model            |   Average (All) |   Average (MTEB) |   Classification |   Clustering |   PairClassification |   Reranking |   Retrieval |    STS |   Summarization |   PEARL |   WordSim |
+|:-----------------|----------------:|-----------------:|-----------------:|-------------:|---------------------:|------------:|------------:|-------:|----------------:|--------:|----------:|
+| GloVe_300d       |           42.84 |            42.36 |            57.31 |        27.66 |                72.48 |       43.3  |       22.78 |  61.9  |           28.81 |   45.65 |     43.05 |
 ```
 
 Alternatively, the evaluation can be run on a subset of tasks by specifying the task types:
@@ -44,7 +43,7 @@ from evaluation import CustomMTEB, get_tasks, TaskType
 from sentence_transformers import SentenceTransformer
 
 # Define the model name
-model_name = "average_word_embeddings_komninos"
+model_name = "average_word_embeddings_glove.6B.300d"
 
 # Get the specified tasks, in this case the classification and wordsim tasks
 task_types = [TaskType.CLASSIFICATION, TaskType.WORDSIM]
@@ -84,7 +83,7 @@ task_scores = summarize_results(results)
 print(make_leaderboard(task_scores))
 
 # To summarize a single model:
-results = load_results("results/average_word_embeddings_komninos/")
+results = load_results("results/average_word_embeddings_glove.6B.300d/")
 task_scores = summarize_results(results)
 print(make_leaderboard(task_scores))
 ```
