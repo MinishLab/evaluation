@@ -98,7 +98,7 @@ class ClassificationBenchmark:
                 "runtime": runtime,
                 "encode_time": encode_time,
                 "dataset_length": len(dataset["train"]),
-                "samples_second": len(dataset["train"]) / runtime,
+                "samples_second": len(dataset["train"]) / encode_time,
             }
 
             # Save the results to a JSON file
