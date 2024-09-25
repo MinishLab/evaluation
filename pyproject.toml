@@ -9,7 +9,6 @@ dependencies = [
 "autofj",
 "datasets",
 "huggingface-hub",
-"matplotlib",
 "mteb==1.14.15",
 "numpy",
 "pandas",
@@ -20,6 +19,7 @@ dependencies = [
 "seaborn",
 "sentence_transformers",
 "torch",
+"plotnine",
 ]
 
 [project.optional-dependencies]

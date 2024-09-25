@@ -3,12 +3,10 @@ import time
 from logging import getLogger
 from pathlib import Path
 
-import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
 import pandas as pd
 from datasets import Dataset, load_dataset
-from matplotlib.colors import LogNorm
 from mteb.encoder_interface import Encoder
+from plotnine import aes, geom_point, ggplot, guides, scale_size, theme, theme_classic
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.pipeline import make_pipeline
@@ -122,17 +120,12 @@ def summarize_classification_results(results_path: str) -> pd.DataFrame:
     :param results_path: Path to the directory containing the results JSON files.
     :return: A pandas DataFrame containing the results.
     """
-    # Set a more readable font
-    plt.rcParams["font.family"] = "Verdana"  # Change to 'DejaVu Sans' if preferred
-    plt.rcParams["font.weight"] = "normal"  # Set all text to normal weight by default
-
-    # Apply the correct Seaborn style
-    plt.style.use("seaborn-v0_8-darkgrid")  # Using the available Seaborn v0_8 style
-
     result_files = Path(results_path).glob("*.json")
 
     data = []
     model_averages = []
+
+    names = {"GloVe_300d": "GloVe 6B 300d"}
 
     # Process each file and extract the model name, dataset scores, and runtimes
     for file in result_files:
@@ -166,75 +159,31 @@ def summarize_classification_results(results_path: str) -> pd.DataFrame:
         # Calculate averages for scatterplot
         avg_score = total_score / dataset_count
         samples_second = total_samples / total_time
+
         model_averages.append(
             {
-                "model": model_name,
-                "avg_score": avg_score,
-                "samples_second": samples_second,
-                "params": params,  # Use the params from the file
+                "Model": names.get(model_name, model_name),
+                "Accuracy": avg_score,
+                "Samples per second": samples_second,
+                "Params (Million)": params / 1_000_000,  # Use the params from the file
             }
         )
 
-    # Create DataFrame for scores
-    df = pd.DataFrame(data)
-
     # Generate enhanced scatterplot for sentences per second vs average score
     avg_df = pd.DataFrame(model_averages)
-    fig, ax = plt.subplots(figsize=(10, 7))
 
-    # Create a colormap with more fine-grained differences
-    cmap = mcolors.LinearSegmentedColormap.from_list("bubble_color", ["#888888", "#a8d08d", "green"])  # Grey to green
+    return avg_df
 
-    # Use a log scale normalization for the x-values (sentences per second) for smoother transitions
-    norm = LogNorm(vmin=min(avg_df["samples_second"]), vmax=max(avg_df["samples_second"]))
 
-    # Increase bubble size scaling factor
-    size_factor = 5000  # Increased this to make the bubbles larger
-    sizes = avg_df["params"] / max(avg_df["params"]) * size_factor  # Larger scaling factor
-
-    # Plot scatter with bubble colors based on the x-values (sentences per second) using log scale
-    scatter = ax.scatter(
-        avg_df["samples_second"],
-        avg_df["avg_score"],
-        s=sizes,  # Use model parameter sizes for bubble size
-        c=avg_df["samples_second"],  # Color based on the "sentences per second" value
-        cmap=cmap,  # Use an expanded colormap for finer differences
-        alpha=0.7,
-        edgecolors="w",
-        norm=norm,  # Logarithmic normalization for smoother color scaling
+def plot_avg_df(df: pd.DataFrame) -> ggplot:
+    """Creates a plot of the average df returned by the summarization."""
+    plot = (
+        ggplot(df, aes(x="Samples per second", y="Accuracy", size="Params (Million)", color="Model"))
+        + geom_point()  # Plot points with variable size
+        + scale_size(range=(5, 15))  # Adjust the range: min size = 5, max size = 15
+        + theme(figure_size=(10, 6))  # Adjust figure size (width, height) in inches
+        + theme_classic()
+        + guides(None)
     )
 
-    # Place the model names in the center of the bubbles (bold)
-    for i, model in enumerate(avg_df["model"]):
-        ax.text(
-            avg_df["samples_second"][i],
-            avg_df["avg_score"][i],
-            model,
-            fontsize=10,  # Font size
-            fontweight="bold",  # Bold text for model names
-            ha="center",  # Center horizontally
-            va="center",  # Center vertically
-        )
-
-    # Set the axis limits as tuples (fixing the mypy issue)
-    ax.set_xlim(
-        (
-            min(avg_df["samples_second"]) - 0.05 * max(avg_df["samples_second"]),
-            max(avg_df["samples_second"]) + 0.05 * max(avg_df["samples_second"]),
-        )
-    )
-    ax.set_ylim((min(avg_df["avg_score"]) - 0.05, max(avg_df["avg_score"]) + 0.05))
-
-    # Set the axis labels and title (normal weight)
-    ax.set_xlabel("Sentences per second", fontsize=12, fontweight="normal")
-    ax.set_ylabel("Average Score", fontsize=12, fontweight="normal")
-    ax.set_title(
-        "Model Performance: Sentences per second vs Average Score (bubble size = parameters)",
-        fontsize=14,
-        fontweight="normal",
-    )
-    ax.grid(True)
-
-    plt.show()
-
-    return df
+    return plot
