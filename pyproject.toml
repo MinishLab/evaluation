@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 
 dependencies = [
 "autofj",
-"datasets<=4.0.0",
+"datasets<4.0.0",
 "huggingface-hub",
 "mteb==1.14.15",
 "numpy",
